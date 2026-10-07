@@ -1,0 +1,8 @@
+[package]
+name = "pina_amm_cpi"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+pina = { version = "0.23", default-features = false }

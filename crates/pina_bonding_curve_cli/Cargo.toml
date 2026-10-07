@@ -1,0 +1,38 @@
+[package]
+name = "pina_bonding_curve_cli"
+version.workspace = true
+categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
+edition.workspace = true
+homepage.workspace = true
+keywords = ["solana", "bonding-curve", "launchpad", "pina", "cli"]
+license.workspace = true
+repository = "https://github.com/pina-rs/bonding_curve/tree/main/crates/pina_bonding_curve_cli"
+rust-version.workspace = true
+description = "Command-line interface for the Pina Bonding Curve: design curves, run launchpads, launch tokens, trade, graduate, and claim"
+
+[[bin]]
+name = "pina-curve"
+path = "src/main.rs"
+# The program crate is also documented as `pina_bonding_curve`; the binary
+# needs no rustdoc page of its own.
+doc = false
+
+[dependencies]
+base64 = { workspace = true }
+clap = { workspace = true }
+pina_bonding_curve_client = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+solana-commitment-config = { workspace = true }
+solana-instruction = { workspace = true }
+solana-keypair = { workspace = true }
+solana-message = { workspace = true }
+solana-pubkey = { workspace = true }
+solana-rpc-client = { workspace = true }
+solana-rpc-client-api = { workspace = true }
+solana-signer = { workspace = true }
+solana-transaction = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

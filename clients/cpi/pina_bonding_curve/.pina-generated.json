@@ -1,0 +1,21 @@
+{
+  "paths": [
+    "Cargo.toml",
+    "src/generated/accounts/launch.rs",
+    "src/generated/accounts/launch_config.rs",
+    "src/generated/accounts/mod.rs",
+    "src/generated/instructions/buy.rs",
+    "src/generated/instructions/claim_creator_allocation.rs",
+    "src/generated/instructions/claim_creator_fees.rs",
+    "src/generated/instructions/claim_partner_fees.rs",
+    "src/generated/instructions/create_config.rs",
+    "src/generated/instructions/create_launch.rs",
+    "src/generated/instructions/graduate.rs",
+    "src/generated/instructions/mod.rs",
+    "src/generated/instructions/sell.rs",
+    "src/generated/instructions/set_launch_creator.rs",
+    "src/generated/mod.rs",
+    "src/generated/programs.rs",
+    "src/lib.rs"
+  ]
+}
