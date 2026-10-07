@@ -10,10 +10,10 @@ Measured on the real SBF artifacts by the end-to-end suite (`compute_units_stay_
 | -------------- | ------------- | --------------------------------------------------------------------------- | ---------- |
 | `Buy`          | ~8,400        | 2 transfers                                                                 | 10,000     |
 | `Sell`         | ~9,000        | 2 transfers                                                                 | 11,000     |
-| `CreateLaunch` | ~21,300       | creates 3 accounts, mints, revokes the mint authority                       | 26,000     |
-| `Graduate`     | ~65,400       | the AMM's `CreatePool` (5 accounts, 2 transfers, 1 mint), LP and base burns | 80,000     |
+| `CreateLaunch` | 19,800–21,300 | creates 3 accounts, mints, revokes the mint authority                       | 32,000     |
+| `Graduate`     | 65,000–90,000 | the AMM's `CreatePool` (5 accounts, 2 transfers, 1 mint), LP and base burns | 130,000    |
 
-`Graduate` costs about 91,000 compute units when it also creates LP token accounts for the creator and partner. The suite fails if any instruction exceeds its ceiling, so a regression is caught in the pull request that introduces it.
+Costs that derive PDAs vary with the addresses involved: every extra bump attempt in a PDA search costs about 1,500 compute units, and graduation searches for the pool, LP mint, vault, and token account bumps. Creating LP token accounts for the creator and partner adds about 25,000 more. The suite fails if any instruction exceeds its ceiling, so a regression is caught in the pull request that introduces it.
 
 A buy's cost grows slightly with the number of segments it crosses, because each crossing prices one more segment. Most buys stay within one segment.
 

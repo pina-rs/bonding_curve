@@ -51,12 +51,12 @@ To list every launch under a configuration, filter `Launch` accounts by their `c
 
 ## Compute budget
 
-| Instruction    | Measured                               | Suggested limit |
-| -------------- | -------------------------------------- | --------------- |
-| `Buy`          | ~8,400 CU                              | 15,000          |
-| `Sell`         | ~9,000 CU                              | 15,000          |
-| `CreateLaunch` | ~21,300 CU                             | 40,000          |
-| `Graduate`     | ~65,000 CU, ~91,000 CU with LP payouts | 150,000         |
+| Instruction    | Measured                                            | Suggested limit |
+| -------------- | --------------------------------------------------- | --------------- |
+| `Buy`          | ~8,400 CU                                           | 15,000          |
+| `Sell`         | ~9,000 CU                                           | 15,000          |
+| `CreateLaunch` | ~20,000 CU                                          | 40,000          |
+| `Graduate`     | 65,000–90,000 CU, about 25,000 more with LP payouts | 150,000         |
 
 Add the cost of anything else in the transaction, such as associated-token-account creation (~10,000 to 25,000 CU each). See [performance.md](performance.md).
 
