@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc d63c71a1200f5ab30336320cb220bd0b65902feb14bc06381c8c87c4abe3b907 # shrinks to curve = Curve { start: 97610000000000000, uppers: [390440000000000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], liquidities: [5000000000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], count: 1 }, first = 25485329093, second = 9522509924
+cc 6ed6b9b3ecab759f10c1eefe639e2de62d30a068b1ff6bbf266b239569d2cfec # shrinks to curve = Curve { start: 97610000000000000, uppers: [390440000000000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], liquidities: [5000000000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], count: 1 }, trades = [(false, 1)]
