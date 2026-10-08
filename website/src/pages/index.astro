@@ -1,0 +1,396 @@
+---
+import CodeTabs from "../components/CodeTabs.astro";
+import CopyButton from "../components/CopyButton.astro";
+import LaunchPlayground from "../components/LaunchPlayground.astro";
+import SiteShell from "../components/SiteShell.astro";
+import { packages, site } from "../lib/site";
+
+const reasons = [
+	{
+		title: "Curves of any shape",
+		body: "A curve is up to 16 segments of concentrated liquidity. One segment is the classic pump-style curve; more segments approximate any rising price schedule.",
+		href: "/docs/curves/",
+	},
+	{
+		title: "A launchpad is one account",
+		body: "Configurations are immutable and self-serve. Create one for your app, game, or community and share its address. There is no admin, allowlist, or pause switch.",
+		href: "/docs/launchpads/",
+	},
+	{
+		title: "Fair by construction",
+		body: "Each launch mints a fixed supply and revokes the mint authority in the same instruction. An opening fee that decays over the first seconds taxes sniping bots instead of buyers.",
+		href: "/docs/fees/",
+	},
+	{
+		title: "Graduation nobody can front-run",
+		body: "Launches graduate into a Pina AMM tier that only this program can create pools in, at the curve's final price. LP not paid to the creator or partner is burned.",
+		href: "/docs/graduation/",
+	},
+	{
+		title: "Revenue for creators and partners",
+		body: "Trading and migration fees split between the token's creator and the launchpad's partner, a creator allocation vests on a schedule, and the graduated pool can keep paying a creator fee.",
+		href: "/docs/fees/#the-split",
+	},
+	{
+		title: "Exact and cheap",
+		body: "Integer math with 256-bit intermediates rounds every step in the curve's favour, and a buy costs about 8,400 compute units including both token transfers.",
+		href: "/docs/performance/",
+	},
+] as const;
+
+const lifecycle = [
+	{
+		state: "Trading",
+		body: "Buys and sells move the price along the curve. The trading fee opens high and falls to the end rate.",
+	},
+	{
+		state: "Completed",
+		body: "The buy that reaches the migration price completes the launch and pays only for what the curve used. Trading stops.",
+	},
+	{
+		state: "Graduated",
+		body: "Anyone can graduate it. The raised SOL and reserved tokens open a Pina AMM pool at the curve's final price, and unsold tokens burn.",
+	},
+] as const;
+
+const figures = [
+	{ value: "8,400", unit: "CU", label: "per buy, both transfers included" },
+	{ value: "16", unit: "", label: "segments a curve can use" },
+	{ value: "1", unit: "", label: "account per launchpad" },
+	{ value: "0", unit: "", label: "admins, allowlists, or pause switches" },
+] as const;
+
+const snippets = [
+	{
+		id: "typescript",
+		label: "TypeScript",
+		lang: "ts",
+		guide: { label: "TypeScript guide", href: "/docs/typescript/" },
+		code: `import { fetchLaunch, getBuyInstruction } from "@pina-rs/bonding-curve";
+import { createSolanaRpc } from "@solana/kit";
+
+const rpc = createSolanaRpc("https://api.devnet.solana.com");
+const { data: launch } = await fetchLaunch(rpc, launchAddress);
+
+const instruction = getBuyInstruction({
+	trader: wallet,
+	config: launch.config,
+	launch: launchAddress,
+	traderBase: walletBaseToken,
+	traderQuote: walletQuoteToken,
+	baseVault: launch.baseVault,
+	quoteVault: launch.quoteVault,
+	baseTokenProgram,
+	quoteTokenProgram,
+	quoteAmountIn: 1_000_000_000n,
+	minimumBaseOut: 33_000_000_000_000n,
+});`,
+	},
+	{
+		id: "rust",
+		label: "Rust",
+		lang: "rust",
+		guide: { label: "Rust client guide", href: "/docs/rust-client/" },
+		code: `use pina_bonding_curve_client::instructions::{Buy, BuyInstructionData};
+
+let data = BuyInstructionData::new(|data| {
+	data.quote_amount_in.set(1_000_000_000); // the most to spend, fee included
+	data.minimum_base_out.set(minimum_base_out);
+})?;
+let instruction = Buy::new(
+	trader,
+	state.config,
+	launch,
+	trader_base,  // credited with base
+	trader_quote, // debited for quote
+	state.base_vault,
+	state.quote_vault,
+	base_token_program,
+	quote_token_program,
+)
+.instruction(data);`,
+	},
+	{
+		id: "dart",
+		label: "Dart",
+		lang: "dart",
+		guide: { label: "Dart guide", href: "/docs/dart/" },
+		code: `final instruction = getBuyInstruction(
+  programAddress: pinaBondingCurveProgramAddress,
+  trader: wallet.address,
+  config: launch.config,
+  launch: launchAddress,
+  traderBase: walletBase,
+  traderQuote: walletQuote,
+  baseVault: launch.baseVault,
+  quoteVault: launch.quoteVault,
+  baseTokenProgram: baseTokenProgram,
+  quoteTokenProgram: quoteTokenProgram,
+  quoteAmountIn: quoteAmountIn,
+  minimumBaseOut: minimumBaseOut,
+);`,
+	},
+	{
+		id: "cpi",
+		label: "CPI",
+		lang: "rust",
+		guide: { label: "CPI guide", href: "/docs/cpi/" },
+		code: `Buy {
+	trader: self.trader,
+	config: self.config,
+	launch: self.launch,
+	trader_base: self.trader_base,
+	trader_quote: self.trader_quote,
+	base_vault: self.base_vault,
+	quote_vault: self.quote_vault,
+	base_token_program: self.base_token_program,
+	quote_token_program: self.quote_token_program,
+	ix: BuyIx {
+		quote_amount_in,
+		minimum_base_out,
+	},
+}
+.invoke_signed(&curve, &[seeds.to_signer().as_signer()])?;`,
+	},
+	{
+		id: "cli",
+		label: "CLI",
+		lang: "sh",
+		guide: { label: "CLI guide", href: "/docs/cli/" },
+		code: `cargo install pina_bonding_curve_cli
+
+# Design a curve that raises 85 SOL while the price rises about 18x.
+pina-curve design segment --from-price 0.000028 --to-price 0.000497 --quote 85000000000
+
+# Launch a token, buy it, and graduate it once it completes.
+pina-curve -u devnet launch create --config <CONFIG>
+pina-curve -u devnet buy --base-mint <MINT> --quote-amount 1000000000
+pina-curve -u devnet graduate --base-mint <MINT>`,
+	},
+] as const;
+
+const guides = [
+	{ title: "Running a launchpad", body: "Every term of a configuration, with presets to start from.", href: "/docs/launchpads/" },
+	{ title: "Designing curves", body: "The segment model, its exact formulas, and a worked example.", href: "/docs/curves/" },
+	{ title: "Fees", body: "The decaying trading fee, the creator and partner split, and the migration fee.", href: "/docs/fees/" },
+	{ title: "Graduation", body: "Completion, price continuity, and where every token goes.", href: "/docs/graduation/" },
+	{ title: "Instructions", body: "Data, accounts, errors, and events for all nine instructions.", href: "/docs/instructions/" },
+	{ title: "Security", body: "The threat model and the invariants the program enforces.", href: "/docs/security/" },
+] as const;
+---
+
+<SiteShell>
+	<section class="hero">
+		<div class="container hero__inner">
+			<div class="hero__copy">
+				<a class="status-pill" href="/docs/security/"><span aria-hidden="true"></span>Pre-release · not yet deployed or audited</a>
+				<h1 class="hero__title">Launch on <em>any curve</em>. Graduate at its price.</h1>
+				<p class="hero__lede">
+					Pina Bonding Curve runs self-serve token launchpads on Solana. One configuration fixes the curve, the supply, and the fees. Every token launched under it sells along that curve, then graduates into a Pina AMM pool at exactly the price it reached.
+				</p>
+				<div class="hero__actions">
+					<a class="button button--primary" href="/docs/">Read the docs</a>
+					<a class="button button--secondary" href="/docs/launchpads/">Run a launchpad</a>
+				</div>
+				<div class="program-id">
+					<span class="program-id__label">Program</span>
+					<code>{site.programId}</code>
+					<CopyButton value={site.programId} label="Copy program ID" />
+				</div>
+			</div>
+			<LaunchPlayground />
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="why-title">
+		<div class="container">
+			<h2 id="why-title" class="section__title">A launchpad you write, not one you rent</h2>
+			<p class="section__lede">
+				Anyone can run a launchpad by writing one configuration: the price curve, the supply, the fees, the creator's terms, and how launches graduate.
+			</p>
+			<ul class="reasons reasons--three" role="list">
+				{
+					reasons.map((reason, index) => (
+						<li class="reason">
+							<span class="reason__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+							<h3>{reason.title}</h3>
+							<p>{reason.body}</p>
+							<a href={reason.href} aria-label={`Read more: ${reason.title}`}>
+								Read more →
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+
+	<section class="section section--band" aria-labelledby="lifecycle-title">
+		<div class="container">
+			<h2 id="lifecycle-title" class="section__title section__title--small">From launch to pool in three states</h2>
+			<ol class="lifecycle" role="list">
+				{
+					lifecycle.map((step, index) => (
+						<li class="lifecycle__step">
+							<span class="lifecycle__index" aria-hidden="true">{index + 1}</span>
+							<h3>{step.state}</h3>
+							<p>{step.body}</p>
+						</li>
+					))
+				}
+			</ol>
+			<dl class="figures">
+				{
+					figures.map((figure) => (
+						<div class="figure">
+							<dt>{figure.label}</dt>
+							<dd>
+								{figure.value}
+								{figure.unit !== "" && <span>{figure.unit}</span>}
+							</dd>
+						</div>
+					))
+				}
+			</dl>
+			<p class="figures__note">
+				The end-to-end suite runs every instruction against the compiled program and fails if a buy exceeds 10,000 compute units. <a href="/docs/performance/">See the measurements</a>.
+			</p>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="clients-title">
+		<div class="container split">
+			<div class="split__copy">
+				<h2 id="clients-title" class="section__title">A client for your stack</h2>
+				<p class="section__lede">
+					Rust, TypeScript, Dart, and on-chain CPI clients are generated from the program's IDL, so they always match it. The <code>pina-curve</code> CLI designs curves offline and runs launches from the terminal.
+				</p>
+				<ul class="packages" role="list">
+					{
+						packages.map((pkg) => (
+							<li>
+								<a href={pkg.href}>
+									<code>{pkg.name}</code>
+									<span class="packages__registry">{pkg.registry}</span>
+								</a>
+								<p>{pkg.summary}</p>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+			<CodeTabs label="Buy examples" tabs={snippets} />
+		</div>
+	</section>
+
+	<section class="section section--launch" aria-labelledby="pool-title">
+		<div class="container launch">
+			<div>
+				<h2 id="pool-title" class="section__title">Every launch ends in a real pool</h2>
+				<p class="section__lede">
+					Graduation creates a Pina AMM pool in a tier only this program can open pools in, so nobody can create it first. Someone who bought the last token on the curve sees the same price on the pool a block later.
+				</p>
+			</div>
+			<a class="launch__card" href={site.sibling.href}>
+				<span class="launch__eyebrow">Graduates into</span>
+				<strong>{site.sibling.name}</strong>
+				<span>A permissionless constant-product market maker whose pools lock their fee rates when they are created.</span>
+				<span class="launch__go" aria-hidden="true">→</span>
+			</a>
+		</div>
+	</section>
+
+	<section class="section" aria-labelledby="docs-title">
+		<div class="container">
+			<h2 id="docs-title" class="section__title">Read the details</h2>
+			<ul class="guides" role="list">
+				{
+					guides.map((guide) => (
+						<li>
+							<a class="guide" href={guide.href}>
+								<strong>{guide.title}</strong>
+								<span>{guide.body}</span>
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</div>
+	</section>
+</SiteShell>
+
+<style>
+	.lifecycle {
+		display: grid;
+		gap: 1rem;
+		margin: 2rem 0 3.5rem;
+		padding: 0;
+		list-style: none;
+		counter-reset: none;
+	}
+
+	@media (min-width: 48rem) {
+		.lifecycle {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 0;
+		}
+	}
+
+	.lifecycle__step {
+		position: relative;
+		display: grid;
+		gap: 0.5rem;
+		padding: 1.25rem 1.5rem 0 0;
+	}
+
+	@media (min-width: 48rem) {
+		/* A rule joins the three states into one line. */
+		.lifecycle__step::before {
+			position: absolute;
+			top: 2.35rem;
+			left: 2.75rem;
+			right: 0.75rem;
+			height: 2px;
+			background: linear-gradient(90deg, var(--pina-accent), var(--pina-gold));
+			content: "";
+			opacity: 0.5;
+		}
+
+		/* Trading leads to completion, and completion to the AMM. */
+		.lifecycle__step:nth-child(2)::before {
+			background: linear-gradient(90deg, var(--pina-gold), var(--pina-sibling));
+		}
+
+		.lifecycle__step:last-child::before {
+			content: none;
+		}
+	}
+
+	.lifecycle__index {
+		display: grid;
+		place-items: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border: 2px solid var(--pina-accent);
+		border-radius: 999px;
+		background: var(--pina-bg-sunken);
+		color: var(--pina-accent-text);
+		font-family: var(--pina-font-mono);
+		font-weight: 700;
+	}
+
+	.lifecycle__step:last-child .lifecycle__index {
+		border-color: var(--pina-sibling);
+		color: var(--pina-sibling);
+	}
+
+	.lifecycle h3 {
+		font-size: 1.25rem;
+	}
+
+	.lifecycle p {
+		max-width: 22rem;
+		color: var(--pina-muted);
+		font-size: 0.95rem;
+	}
+</style>

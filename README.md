@@ -1,5 +1,7 @@
 # Pina Bonding Curve
 
+**Website and documentation:** [bonding-curve.pina.rs](https://bonding-curve.pina.rs)
+
 Self-serve token launchpads for Solana, built with [Pina](https://github.com/pina-rs/pina). Anyone can run a launchpad by writing one configuration: the price curve, the supply, the fees, the creator's terms, and how launches graduate. Every token launched under it sells along that curve and, once it raises its target, graduates into a [Pina AMM](https://github.com/pina-rs/amm) pool at exactly the price the curve reached.
 
 ```text
@@ -104,6 +106,7 @@ devenv shell fetch:amm       # the Pina AMM at the revision pinned in amm.rev
 devenv shell test:unit       # Rust, TypeScript, and Dart unit tests
 devenv shell test:surfpool   # end-to-end suite with the curve and the AMM on an offline Surfnet
 devenv shell lint:all        # Pina security lints, clippy, docs, formatting, workflows
+devenv shell dev:website     # bonding-curve.pina.rs locally, with docs/ as its documentation
 devenv shell verify:all      # everything CI runs
 ```
 
