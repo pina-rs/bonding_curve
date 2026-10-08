@@ -34,6 +34,10 @@ devenv shell test:unit
 devenv shell test:surfpool   # real SBF artifacts on an offline Surfnet, including the CLI
 ```
 
+## Website
+
+`website/` is bonding-curve.pina.rs: an Astro and Starlight site served by a Cloudflare Worker. It renders `docs/*.md` directly, so the guides stay plain GitHub Markdown with a `# Title` first line and relative links; never copy a guide into the site. The landing page's launch simulator uses the segment formulas, fee decay, and reference terms from `docs/curves.md`, `docs/fees.md`, and `docs/launchpads.md`; keep `website/src/lib/launch-curve.ts` and its tests in step when those change. The deploy job runs only on `main`; never deploy from a pull request. See [website/README.md](website/README.md).
+
 ## Release intent
 
 Every pull request that changes a published package adds a changeset in `.changeset/`. User-visible changes add a second `user` changeset with a `## User impact` section in plain language. See `docs/releasing.md`.

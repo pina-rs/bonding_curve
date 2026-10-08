@@ -1,0 +1,439 @@
+---
+/**
+ * The hero's launch simulator. The server renders the reference launch half
+ * filled; the script lets visitors scrub the launch along its curve, switch
+ * the curve's shape, see the anti-sniping fee on a buy, and graduate the
+ * completed launch into its Pina AMM pool.
+ */
+import {
+	curvePath,
+	describeLaunch,
+	migrationPoint,
+	ONE_SEGMENT,
+	PLOT,
+	plotX,
+	plotY,
+	pointAtQuote,
+	poolPath,
+	price,
+	raisedAreaPath,
+	solPerMillionTokens,
+	tokens,
+} from "../lib/launch-curve";
+
+const curve = ONE_SEGMENT;
+const initial = pointAtQuote(curve, 42.5e9);
+const completed = migrationPoint(curve);
+const summary = describeLaunch(curve, initial, 0);
+const plotBottom = PLOT.height - PLOT.bottom;
+const plotRight = PLOT.width - PLOT.right;
+const handle = { x: plotX(tokens(initial.baseSold) / 1e6), y: plotY(solPerMillionTokens(price(initial.sqrtPrice))) };
+const completionX = plotX(tokens(completed.baseSold) / 1e6);
+---
+
+<section class="playground" aria-labelledby="launch-title" data-launch>
+	<div class="playground__head">
+		<div>
+			<p class="playground__eyebrow">Try a launch</p>
+			<h2 id="launch-title" class="playground__title">1 billion tokens, raising 85 SOL</h2>
+		</div>
+		<div class="segmented" role="radiogroup" aria-label="Curve shape">
+			<button type="button" role="radio" aria-checked="true" data-shape="one">One segment</button>
+			<button type="button" role="radio" aria-checked="false" data-shape="three">Three segments</button>
+		</div>
+	</div>
+
+	<svg class="playground__chart" viewBox={`0 0 ${PLOT.width} ${PLOT.height}`} role="img" aria-labelledby="launch-chart-label" data-chart>
+		<title id="launch-chart-label">
+			The launch's price rising along its curve as tokens sell. The shaded area is the SOL the curve holds. At 85 SOL the launch completes and graduates into a Pina AMM pool at the same price.
+		</title>
+		<g class="chart-grid" aria-hidden="true">
+			{
+				PLOT.tokenTicks.map((tick) => (
+					<g>
+						<line x1={plotX(tick)} x2={plotX(tick)} y1={PLOT.top} y2={plotBottom} />
+						<text x={plotX(tick)} y={plotBottom + 20} text-anchor="middle">{`${tick}M`}</text>
+					</g>
+				))
+			}
+			{
+				PLOT.priceTicks.map((tick) => (
+					<g>
+						<line x1={PLOT.left} x2={plotRight} y1={plotY(tick)} y2={plotY(tick)} />
+						<text x={PLOT.left - 10} y={plotY(tick) + 4} text-anchor="end">{tick.toFixed(1)}</text>
+					</g>
+				))
+			}
+			<line class="chart-axis" x1={PLOT.left} x2={plotRight} y1={plotBottom} y2={plotBottom} />
+			<line class="chart-axis" x1={PLOT.left} x2={PLOT.left} y1={PLOT.top} y2={plotBottom} />
+			<text class="chart-label" x={plotRight} y={plotBottom - 10} text-anchor="end">tokens sold →</text>
+			<text class="chart-label" x={PLOT.left + 10} y={PLOT.top + 14}>↑ SOL per 1M tokens</text>
+		</g>
+		<path class="launch-raised" d={raisedAreaPath(curve, initial.baseSold)} data-raised />
+		<g class="launch-segments" aria-hidden="true" data-segments></g>
+		<path class="launch-curve" d={curvePath(curve, completed.baseSold)} data-curve />
+		<line class="launch-completion" x1={completionX} x2={completionX} y1={PLOT.top + 24} y2={plotBottom} data-completion />
+		<text class="launch-completion-label" x={completionX - 8} y={PLOT.top + 36} text-anchor="end" data-completion-label>completes at 85 SOL</text>
+		<path class="launch-pool" d={poolPath(curve)} data-pool />
+		<text class="launch-pool-label" x={completionX + 10} y={PLOT.top + 36} data-pool-label>Pina AMM pool</text>
+		<circle class="chart-handle" cx={handle.x} cy={handle.y} r="10" data-handle />
+	</svg>
+
+	<div class="launch-controls">
+		<label class="launch-slider">
+			<span>Raised</span>
+			<input type="range" min="0" max="850" step="1" value="425" data-raised-input />
+			<output data-raised-output>42.5 SOL</output>
+		</label>
+		<label class="launch-slider">
+			<span>Buy after</span>
+			<input type="range" min="0" max="90" step="1" value="0" data-seconds />
+			<output data-seconds-output>0 s</output>
+		</label>
+	</div>
+
+	<dl class="readout" aria-live="polite" aria-atomic="true">
+		<div>
+			<dt>Raised</dt>
+			<dd data-readout="raised">{summary.raised}</dd>
+		</div>
+		<div>
+			<dt>Sold</dt>
+			<dd data-readout="sold">{summary.sold}</dd>
+		</div>
+		<div>
+			<dt>Price</dt>
+			<dd data-readout="price">{summary.price}</dd>
+		</div>
+		<div>
+			<dt>1 SOL buys</dt>
+			<dd data-readout="buy">{summary.buy}</dd>
+		</div>
+	</dl>
+
+	<div class="playground__foot">
+		<button type="button" class="button button--quiet" data-graduate disabled>Graduate</button>
+		<button type="button" class="button button--link" data-reset hidden>Reset launch</button>
+		<p class="playground__result" data-result>Fill the curve to 85 SOL to complete the launch, then graduate it.</p>
+	</div>
+</section>
+
+<style>
+	.launch-raised {
+		fill: var(--pina-accent-wash);
+	}
+
+	.launch-curve {
+		fill: none;
+		stroke: var(--pina-accent);
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+
+	.launch-segments :global(line) {
+		stroke: var(--pina-accent);
+		stroke-width: 1;
+		stroke-dasharray: 2 4;
+		opacity: 0.6;
+	}
+
+	.launch-segments :global(text) {
+		fill: var(--pina-accent-text);
+		font-family: var(--pina-font-mono);
+		font-size: 11px;
+	}
+
+	.launch-completion {
+		stroke: var(--pina-gold);
+		stroke-width: 1.5;
+		stroke-dasharray: 5 5;
+	}
+
+	.launch-completion-label,
+	.launch-pool-label {
+		font-family: var(--pina-font-mono);
+		font-size: 12px;
+	}
+
+	.launch-completion-label {
+		fill: var(--pina-gold);
+	}
+
+	.launch-pool,
+	.launch-pool-label {
+		opacity: 0;
+		transition: opacity 400ms ease;
+	}
+
+	.launch-pool {
+		fill: none;
+		stroke: var(--pina-amm);
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+
+	.launch-pool-label {
+		fill: var(--pina-amm);
+	}
+
+	[data-graduated] .launch-pool,
+	[data-graduated] .launch-pool-label {
+		opacity: 1;
+	}
+
+	[data-graduated] .playground__chart {
+		cursor: default;
+	}
+
+	.launch-controls {
+		display: grid;
+		gap: 0.6rem;
+	}
+
+	.launch-slider {
+		display: grid;
+		grid-template-columns: 5.5rem minmax(0, 1fr) 5rem;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.launch-slider span {
+		color: var(--pina-muted);
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+
+	.launch-slider input {
+		min-width: 0;
+		accent-color: var(--pina-accent);
+	}
+
+	.launch-slider output {
+		color: var(--pina-ink);
+		font-family: var(--pina-font-mono);
+		font-size: 0.85rem;
+		text-align: right;
+	}
+</style>
+
+<script>
+	import {
+		type Curve,
+		type CurvePoint,
+		curvePath,
+		describeLaunch,
+		formatMillions,
+		formatNumber,
+		graduate,
+		migrationPoint,
+		millionsAtPlotX,
+		ONE_SEGMENT,
+		PLOT,
+		plotX,
+		plotY,
+		pointAtBase,
+		pointAtQuote,
+		poolPath,
+		price,
+		raisedAreaPath,
+		segmentEnds,
+		sol,
+		solPerMillionTokens,
+		TERMS,
+		THREE_SEGMENTS,
+		tokens,
+	} from "../lib/launch-curve";
+
+	const SVG = "http://www.w3.org/2000/svg";
+	/** The raised slider moves in tenths of a SOL. */
+	const LAMPORTS_PER_STEP = 1e8;
+
+	function required<T extends Element>(root: ParentNode, selector: string): T {
+		const element = root.querySelector<T>(selector);
+		if (element === null) {
+			throw new Error(`Launch simulator is missing ${selector}`);
+		}
+		return element;
+	}
+
+	for (const root of document.querySelectorAll<HTMLElement>("[data-launch]")) {
+		const chart = required<SVGSVGElement>(root, "[data-chart]");
+		const raisedArea = required<SVGPathElement>(root, "[data-raised]");
+		const segments = required<SVGGElement>(root, "[data-segments]");
+		const curvePathElement = required<SVGPathElement>(root, "[data-curve]");
+		const completion = required<SVGLineElement>(root, "[data-completion]");
+		const completionLabel = required<SVGTextElement>(root, "[data-completion-label]");
+		const pool = required<SVGPathElement>(root, "[data-pool]");
+		const poolLabel = required<SVGTextElement>(root, "[data-pool-label]");
+		const handle = required<SVGCircleElement>(root, "[data-handle]");
+		const raisedInput = required<HTMLInputElement>(root, "[data-raised-input]");
+		const raisedOutput = required<HTMLOutputElement>(root, "[data-raised-output]");
+		const secondsInput = required<HTMLInputElement>(root, "[data-seconds]");
+		const secondsOutput = required<HTMLOutputElement>(root, "[data-seconds-output]");
+		const graduateButton = required<HTMLButtonElement>(root, "[data-graduate]");
+		const resetButton = required<HTMLButtonElement>(root, "[data-reset]");
+		const result = required<HTMLElement>(root, "[data-result]");
+		const idleResult = result.textContent ?? "";
+		const shapeButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-shape]")];
+		const readout = {
+			raised: required<HTMLElement>(root, '[data-readout="raised"]'),
+			sold: required<HTMLElement>(root, '[data-readout="sold"]'),
+			price: required<HTMLElement>(root, '[data-readout="price"]'),
+			buy: required<HTMLElement>(root, '[data-readout="buy"]'),
+		};
+
+		const state: { curve: Curve; point: CurvePoint; seconds: number; graduated: boolean } = {
+			curve: ONE_SEGMENT,
+			point: pointAtQuote(ONE_SEGMENT, Number(raisedInput.value) * LAMPORTS_PER_STEP),
+			seconds: Number(secondsInput.value),
+			graduated: false,
+		};
+
+		function isComplete(): boolean {
+			return state.point.quoteRaised >= TERMS.migrationQuote;
+		}
+
+		/** Redraws everything that depends only on the curve's shape. */
+		function renderCurve(): void {
+			const completed = migrationPoint(state.curve);
+			const x = plotX(tokens(completed.baseSold) / 1e6);
+			curvePathElement.setAttribute("d", curvePath(state.curve, completed.baseSold));
+			pool.setAttribute("d", poolPath(state.curve));
+			for (const [element, offset] of [[completionLabel, -8], [poolLabel, 10]] as const) {
+				element.setAttribute("x", String(x + offset));
+			}
+			completion.setAttribute("x1", String(x));
+			completion.setAttribute("x2", String(x));
+			const boundaries = segmentEnds(state.curve)
+				.slice(0, -1)
+				.filter((end) => end < completed.baseSold)
+				.map((end) => plotX(tokens(end) / 1e6));
+			const lastBoundary = boundaries.at(-1);
+			segments.replaceChildren(
+				// Each boundary names the segment that ends there; the last segment is named after it.
+				...boundaries.flatMap((x, index) => [boundaryLine(x), segmentLabel(x - 6, "end", index + 1)]),
+				...(lastBoundary === undefined ? [] : [segmentLabel(lastBoundary + 6, "start", boundaries.length + 1)]),
+			);
+		}
+
+		function boundaryLine(x: number): SVGLineElement {
+			const line = document.createElementNS(SVG, "line");
+			line.setAttribute("x1", String(x));
+			line.setAttribute("x2", String(x));
+			line.setAttribute("y1", String(PLOT.top + 48));
+			line.setAttribute("y2", String(PLOT.height - PLOT.bottom));
+			return line;
+		}
+
+		function segmentLabel(x: number, anchor: "start" | "end", segment: number): SVGTextElement {
+			const label = document.createElementNS(SVG, "text");
+			label.setAttribute("x", String(x));
+			label.setAttribute("y", String(PLOT.height - PLOT.bottom - 8));
+			label.setAttribute("text-anchor", anchor);
+			label.textContent = `segment ${segment}`;
+			return label;
+		}
+
+		function renderPoint(): void {
+			raisedArea.setAttribute("d", raisedAreaPath(state.curve, state.point.baseSold));
+			handle.setAttribute("cx", String(plotX(tokens(state.point.baseSold) / 1e6)));
+			handle.setAttribute("cy", String(plotY(solPerMillionTokens(price(state.point.sqrtPrice)))));
+			raisedOutput.textContent = `${formatNumber(sol(state.point.quoteRaised), 1)} SOL`;
+			secondsOutput.textContent = `${state.seconds} s`;
+			const summary = describeLaunch(state.curve, state.point, state.seconds);
+			readout.raised.textContent = summary.raised;
+			readout.sold.textContent = summary.sold;
+			readout.price.textContent = summary.price;
+			readout.buy.textContent = state.graduated ? "Trading on the Pina AMM" : summary.buy;
+			graduateButton.disabled = state.graduated || !isComplete();
+			if (!state.graduated) {
+				result.textContent = isComplete()
+					? "Complete: the curve has raised 85 SOL and trading on it has stopped. Anyone can graduate it now."
+					: idleResult;
+			}
+		}
+
+		function setQuote(quote: number): void {
+			const capped = Math.min(Math.max(quote, 0), TERMS.migrationQuote);
+			state.point = capped >= TERMS.migrationQuote ? migrationPoint(state.curve) : pointAtQuote(state.curve, capped);
+			raisedInput.value = String(Math.round(state.point.quoteRaised / LAMPORTS_PER_STEP));
+			renderPoint();
+		}
+
+		function setGraduated(graduated: boolean): void {
+			state.graduated = graduated;
+			root.toggleAttribute("data-graduated", graduated);
+			raisedInput.disabled = graduated;
+			resetButton.hidden = !graduated;
+			for (const button of shapeButtons) {
+				button.disabled = graduated;
+			}
+		}
+
+		raisedInput.addEventListener("input", () => setQuote(Number(raisedInput.value) * LAMPORTS_PER_STEP));
+
+		secondsInput.addEventListener("input", () => {
+			state.seconds = Number(secondsInput.value);
+			renderPoint();
+		});
+
+		for (const button of shapeButtons) {
+			button.addEventListener("click", () => {
+				state.curve = button.dataset.shape === "three" ? THREE_SEGMENTS : ONE_SEGMENT;
+				for (const candidate of shapeButtons) {
+					candidate.setAttribute("aria-checked", String(candidate === button));
+				}
+				renderCurve();
+				setQuote(state.point.quoteRaised);
+			});
+		}
+
+		function dragTo(event: PointerEvent): void {
+			const matrix = chart.getScreenCTM();
+			if (matrix === null) {
+				return;
+			}
+			const x = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse()).x;
+			const base = Math.max(millionsAtPlotX(x), 0) * 1e6 * 1e6;
+			const completed = migrationPoint(state.curve);
+			setQuote(base >= completed.baseSold ? TERMS.migrationQuote : pointAtBase(state.curve, base).quoteRaised);
+		}
+
+		chart.addEventListener("pointerdown", (event) => {
+			if (state.graduated) {
+				return;
+			}
+			chart.setPointerCapture(event.pointerId);
+			chart.classList.add("is-dragging");
+			dragTo(event);
+		});
+		chart.addEventListener("pointermove", (event) => {
+			if (chart.hasPointerCapture(event.pointerId)) {
+				dragTo(event);
+			}
+		});
+		for (const type of ["pointerup", "pointercancel"] as const) {
+			chart.addEventListener(type, (event) => {
+				chart.releasePointerCapture(event.pointerId);
+				chart.classList.remove("is-dragging");
+			});
+		}
+
+		graduateButton.addEventListener("click", () => {
+			const graduation = graduate(state.curve);
+			setGraduated(true);
+			renderPoint();
+			result.textContent = `Graduated. ${formatNumber(sol(graduation.poolQuote), 1)} SOL and ${formatMillions(graduation.poolBase)} tokens `
+				+ `opened a Pina AMM pool at ${formatNumber(solPerMillionTokens(graduation.price), 3)} SOL per 1M, the curve's final price. `
+				+ `${formatMillions(graduation.burned)} unsold tokens were burned, and with these terms all of the pool's LP is burned, so its liquidity is locked.`;
+		});
+
+		resetButton.addEventListener("click", () => {
+			setGraduated(false);
+			setQuote(0);
+		});
+
+		renderCurve();
+		renderPoint();
+	}
+</script>
