@@ -1,0 +1,398 @@
+{
+	"schema_version": "0.9",
+	"kind": "monochange.releaseRecord",
+	"created_at": "2026-10-08T22:23:47Z",
+	"command": "release",
+	"version": "0.1.0",
+	"versions": {
+		"bonding_curve": "0.1.0"
+	},
+	"release_targets": [
+		{
+			"id": "bonding_curve",
+			"kind": "group",
+			"version": "0.1.0",
+			"version_format": "primary",
+			"tag": true,
+			"release": true,
+			"tag_name": "v0.1.0",
+			"rendered_title": "v0.1.0 (2026-10-08)",
+			"rendered_changelog_title": "[0.1.0](https://github.com/pina-rs/bonding_curve/releases/tag/v0.1.0) (2026-10-08)",
+			"members": [
+				"pina_bonding_curve_program",
+				"pina_bonding_curve_cpi",
+				"pina_bonding_curve_client",
+				"pina_bonding_curve_cli",
+				"pina_bonding_curve_client_typescript",
+				"pina_bonding_curve_client_dart"
+			]
+		}
+	],
+	"released_packages": [
+		"@pina-rs/bonding-curve",
+		"pina_bonding_curve",
+		"pina_bonding_curve_cli",
+		"pina_bonding_curve_client",
+		"pina_bonding_curve_cpi"
+	],
+	"changed_files": [
+		"Cargo.lock",
+		"Cargo.toml",
+		"changelog.md",
+		"clients/cpi/pina_bonding_curve/Cargo.toml",
+		"clients/dart/pubspec.yaml",
+		"clients/rust/pina_bonding_curve/Cargo.toml",
+		"clients/typescript/pina_bonding_curve/package.json",
+		"crates/pina_bonding_curve_cli/Cargo.toml",
+		"programs/pina_bonding_curve/Cargo.toml",
+		"release-notes/v0.1.0.md"
+	],
+	"package_publications": [
+		{
+			"package": "pina_bonding_curve_cli",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.1.0",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.1.0",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client_dart",
+			"ecosystem": "dart",
+			"registry": "pub_dev",
+			"version": "0.1.0",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client_typescript",
+			"ecosystem": "npm",
+			"registry": "npm",
+			"version": "0.1.0",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_cpi",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.1.0",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		}
+	],
+	"updated_changelogs": [
+		"changelog.md",
+		"release-notes/v0.1.0.md"
+	],
+	"deleted_changesets": [
+		".changeset/launch-pina-bonding-curve-user.md",
+		".changeset/launch-pina-bonding-curve.md"
+	],
+	"changesets": [
+		{
+			"path": ".changeset/launch-pina-bonding-curve-user.md",
+			"summary": "Run your own token launchpad on Solana",
+			"details": "##### User impact\n\nYou can now launch a token whose price rises along a curve you choose, from a classic single curve to a stepped schedule. Every launch has a fixed supply that can never grow, an opening fee that discourages bots, and earnings for the token's creator and the launchpad that hosts it. When a launch reaches its target, anyone can move it to an open market at exactly the price it reached, with its liquidity locked.",
+			"targets": [
+				{
+					"id": "bonding_curve",
+					"kind": "group",
+					"bump": "none",
+					"origin": "direct-change",
+					"evidence_refs": [],
+					"change_type": "user"
+				}
+			],
+			"context": {
+				"provider": "github",
+				"host": "github.com",
+				"capabilities": {
+					"commit_web_urls": true,
+					"actor_profiles": true,
+					"review_request_lookup": true,
+					"related_issues": true,
+					"issue_comments": true
+				},
+				"introduced": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"short_sha": "a826b83",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"authored_at": "2026-10-07T14:26:19+01:00",
+						"committed_at": "2026-10-07T14:26:19+01:00",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#1",
+						"title": "feat: add the Pina Bonding Curve program, clients, CLI, and documentation",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/1",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"last_updated": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"short_sha": "a826b83",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"authored_at": "2026-10-07T14:26:19+01:00",
+						"committed_at": "2026-10-07T14:26:19+01:00",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#1",
+						"title": "feat: add the Pina Bonding Curve program, clients, CLI, and documentation",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/1",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"related_issues": []
+			}
+		},
+		{
+			"path": ".changeset/launch-pina-bonding-curve.md",
+			"summary": "Launch the Pina Bonding Curve program, clients, and CLI",
+			"details": "The first release of the Pina Bonding Curve: self-serve launchpads built with Pina 0.23 that graduate into the Pina AMM.\n\n- **Program** (`CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9`): immutable partner configurations with up to 16 concentrated-liquidity curve segments in Q64.64 square-root prices, fixed-supply launches that revoke the mint authority, buys and sells with a linearly decaying anti-sniping fee split between creator and partner, completion at the derived migration price with partial fills, permissionless graduation into a Pina AMM tier restricted to the curve's AMM authority PDA (price-continuous seeding, migration fee, LP payout or burn, surplus base burn), vested creator allocations, and fee claims. A buy costs about 8,400 compute units.\n- **`pina_bonding_curve_client`**, **`pina_bonding_curve_cpi`**, **`@pina-rs/bonding-curve`**, and **`pina_bonding_curve`** (Dart): generated from the program IDL with the version-0 migration baseline.\n- **`pina_bonding_curve_cli`**: the `pina-curve` binary, which designs curves offline, previews configurations by simulation, quotes trades by simulation, applies slippage limits, and wraps SOL for wrapped-SOL launches.\n\nThe Pina AMM dependency is pinned in `amm.rev` and vendored as a generated CPI crate. Unit and property tests cover the curve math and rounding; an end-to-end Surfpool suite deploys the curve beside the pinned AMM, drives every instruction through the generated Rust client and the CLI, and enforces compute-unit ceilings.",
+			"targets": [
+				{
+					"id": "bonding_curve",
+					"kind": "group",
+					"bump": "minor",
+					"origin": "direct-change",
+					"evidence_refs": [],
+					"change_type": "feat"
+				}
+			],
+			"context": {
+				"provider": "github",
+				"host": "github.com",
+				"capabilities": {
+					"commit_web_urls": true,
+					"actor_profiles": true,
+					"review_request_lookup": true,
+					"related_issues": true,
+					"issue_comments": true
+				},
+				"introduced": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"short_sha": "a826b83",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"authored_at": "2026-10-07T14:26:19+01:00",
+						"committed_at": "2026-10-07T14:26:19+01:00",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#1",
+						"title": "feat: add the Pina Bonding Curve program, clients, CLI, and documentation",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/1",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"last_updated": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"short_sha": "a826b83",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/a826b83a62587d191a93892413cb915b9aa4b0e2",
+						"authored_at": "2026-10-07T14:26:19+01:00",
+						"committed_at": "2026-10-07T14:26:19+01:00",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#1",
+						"title": "feat: add the Pina Bonding Curve program, clients, CLI, and documentation",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/1",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"related_issues": []
+			}
+		}
+	],
+	"changelogs": [
+		{
+			"owner_id": "bonding_curve",
+			"owner_kind": "group",
+			"output": "default",
+			"stream": "default",
+			"path": "changelog.md",
+			"format": "keep_a_changelog",
+			"notes": {
+				"title": "[0.1.0](https://github.com/pina-rs/bonding_curve/releases/tag/v0.1.0) (2026-10-08)",
+				"summary": [
+					"Grouped release for `bonding_curve`."
+				],
+				"sections": [
+					{
+						"title": "Features",
+						"collapsed": false,
+						"entries": [
+							"#### Launch the Pina Bonding Curve program, clients, and CLI\n\n_Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #1](https://github.com/pina-rs/bonding_curve/pull/1)\n\nThe first release of the Pina Bonding Curve: self-serve launchpads built with Pina 0.23 that graduate into the Pina AMM.\n\n- **Program** (`CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9`): immutable partner configurations with up to 16 concentrated-liquidity curve segments in Q64.64 square-root prices, fixed-supply launches that revoke the mint authority, buys and sells with a linearly decaying anti-sniping fee split between creator and partner, completion at the derived migration price with partial fills, permissionless graduation into a Pina AMM tier restricted to the curve's AMM authority PDA (price-continuous seeding, migration fee, LP payout or burn, surplus base burn), vested creator allocations, and fee claims. A buy costs about 8,400 compute units.\n- **`pina_bonding_curve_client`**, **`pina_bonding_curve_cpi`**, **`@pina-rs/bonding-curve`**, and **`pina_bonding_curve`** (Dart): generated from the program IDL with the version-0 migration baseline.\n- **`pina_bonding_curve_cli`**: the `pina-curve` binary, which designs curves offline, previews configurations by simulation, quotes trades by simulation, applies slippage limits, and wraps SOL for wrapped-SOL launches.\n\nThe Pina AMM dependency is pinned in `amm.rev` and vendored as a generated CPI crate. Unit and property tests cover the curve math and rounding; an end-to-end Surfpool suite deploys the curve beside the pinned AMM, drives every instruction through the generated Rust client and the CLI, and enforces compute-unit ceilings."
+						]
+					}
+				]
+			},
+			"rendered": "## [0.1.0](https://github.com/pina-rs/bonding_curve/releases/tag/v0.1.0) (2026-10-08)\n\nGrouped release for `bonding_curve`.\n\n### Features\n\n#### Launch the Pina Bonding Curve program, clients, and CLI\n\n_Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #1](https://github.com/pina-rs/bonding_curve/pull/1)\n\nThe first release of the Pina Bonding Curve: self-serve launchpads built with Pina 0.23 that graduate into the Pina AMM.\n\n- **Program** (`CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9`): immutable partner configurations with up to 16 concentrated-liquidity curve segments in Q64.64 square-root prices, fixed-supply launches that revoke the mint authority, buys and sells with a linearly decaying anti-sniping fee split between creator and partner, completion at the derived migration price with partial fills, permissionless graduation into a Pina AMM tier restricted to the curve's AMM authority PDA (price-continuous seeding, migration fee, LP payout or burn, surplus base burn), vested creator allocations, and fee claims. A buy costs about 8,400 compute units.\n- **`pina_bonding_curve_client`**, **`pina_bonding_curve_cpi`**, **`@pina-rs/bonding-curve`**, and **`pina_bonding_curve`** (Dart): generated from the program IDL with the version-0 migration baseline.\n- **`pina_bonding_curve_cli`**: the `pina-curve` binary, which designs curves offline, previews configurations by simulation, quotes trades by simulation, applies slippage limits, and wraps SOL for wrapped-SOL launches.\n\nThe Pina AMM dependency is pinned in `amm.rev` and vendored as a generated CPI crate. Unit and property tests cover the curve math and rounding; an end-to-end Surfpool suite deploys the curve beside the pinned AMM, drives every instruction through the generated Rust client and the CLI, and enforces compute-unit ceilings."
+		},
+		{
+			"owner_id": "bonding_curve",
+			"owner_kind": "group",
+			"output": "user",
+			"stream": "user",
+			"path": "release-notes/v0.1.0.md",
+			"format": "monochange",
+			"notes": {
+				"title": "[0.1.0](https://github.com/pina-rs/bonding_curve/releases/tag/v0.1.0) (2026-10-08)",
+				"summary": [
+					"Grouped release for `bonding_curve`."
+				],
+				"sections": [
+					{
+						"title": "What's new",
+						"collapsed": false,
+						"entries": [
+							"#### Run your own token launchpad on Solana\n\n_Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #1](https://github.com/pina-rs/bonding_curve/pull/1)\n\n##### User impact\n\nYou can now launch a token whose price rises along a curve you choose, from a classic single curve to a stepped schedule. Every launch has a fixed supply that can never grow, an opening fee that discourages bots, and earnings for the token's creator and the launchpad that hosts it. When a launch reaches its target, anyone can move it to an open market at exactly the price it reached, with its liquidity locked."
+						]
+					}
+				]
+			},
+			"rendered": "## [0.1.0](https://github.com/pina-rs/bonding_curve/releases/tag/v0.1.0) (2026-10-08)\n\nGrouped release for `bonding_curve`.\n\n### What's new\n\n#### Run your own token launchpad on Solana\n\n_Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #1](https://github.com/pina-rs/bonding_curve/pull/1)\n\n##### User impact\n\nYou can now launch a token whose price rises along a curve you choose, from a classic single curve to a stepped schedule. Every launch has a fixed supply that can never grow, an opening fee that discourages bots, and earnings for the token's creator and the launchpad that hosts it. When a launch reaches its target, anyone can move it to an open market at exactly the price it reached, with its liquidity locked."
+		}
+	],
+	"provider": {
+		"kind": "github",
+		"owner": "pina-rs",
+		"repo": "bonding_curve",
+		"host": null
+	}
+}
