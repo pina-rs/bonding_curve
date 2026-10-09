@@ -1523,7 +1523,7 @@ dependencies = [
 
 [[package]]
 name = "pina_bonding_curve"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "pina",
  "pina_amm_cpi",
@@ -1532,7 +1532,7 @@ dependencies = [
 
 [[package]]
 name = "pina_bonding_curve_cli"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1553,7 +1553,7 @@ dependencies = [
 
 [[package]]
 name = "pina_bonding_curve_client"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "num-derive 0.5.1",
  "num-traits",
@@ -1566,7 +1566,7 @@ dependencies = [
 
 [[package]]
 name = "pina_bonding_curve_cpi"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "pina",
 ]

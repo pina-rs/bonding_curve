@@ -12,7 +12,7 @@ members = [
 exclude = ["programs/pina_bonding_curve/tests/surfpool", "vendor/pina_amm"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 homepage = "https://github.com/pina-rs/bonding_curve"
 license = "Apache-2.0"
@@ -25,7 +25,7 @@ num-derive = { default-features = false, version = "0.5" }
 num-traits = { default-features = false, version = "0.2" }
 pina = { default-features = false, version = "=0.23.0" }
 pina_amm_cpi = { path = "vendor/pina_amm" }
-pina_bonding_curve_client = { path = "clients/rust/pina_bonding_curve", version = "0.0.0" }
+pina_bonding_curve_client = { path = "clients/rust/pina_bonding_curve", version = "0.1.0" }
 proptest = { default-features = false, version = "1", features = ["std"] }
 serde = { default-features = false, version = "1", features = ["derive", "std"] }
 serde_json = { default-features = false, version = "1", features = ["std"] }

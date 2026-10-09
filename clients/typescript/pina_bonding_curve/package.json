@@ -1,6 +1,6 @@
 {
 	"name": "@pina-rs/bonding-curve",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "TypeScript client for the Pina Bonding Curve: launchpad instruction builders, account decoders, PDAs, events, and errors for @solana/kit",
 	"keywords": [
 		"solana",
