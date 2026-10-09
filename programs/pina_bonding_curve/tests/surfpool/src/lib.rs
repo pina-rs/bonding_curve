@@ -77,6 +77,7 @@ mod code {
 	pub const SLIPPAGE_EXCEEDED: u32 = 14;
 	pub const NOTHING_TO_CLAIM: u32 = 20;
 	pub const MISSING_LP_ACCOUNT: u32 = 21;
+	pub const DEFAULT_CREATOR: u32 = 22;
 }
 
 /// The economic terms a test configuration uses.
@@ -269,8 +270,15 @@ fn create_launch_instruction(
 	)
 }
 
-fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> LaunchFixture {
-	let creator = h.funded_keypair().expect("creator");
+/// Launch with an explicit creator key, who must also be the base mint's
+/// mint authority. Passing the partner's key models a partner launching
+/// under their own configuration.
+fn launch_fixture(
+	h: &Harness,
+	config: &Config,
+	creator: &Keypair,
+	activation_time: u64,
+) -> LaunchFixture {
 	let mint = Keypair::new();
 	h.create_mint_with_authority(
 		&mint,
@@ -289,17 +297,26 @@ fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> Launc
 			&base_mint,
 			activation_time,
 		)],
-		&[&creator],
+		&[creator],
 	)
 	.expect("create launch");
 	let launch = Launch::find_pda(&base_mint).0;
 	LaunchFixture {
 		base_vault: vault(&launch, &base_mint),
 		quote_vault: vault(&launch, &config.quote_mint),
-		creator,
+		creator: creator.insecure_clone(),
 		base_mint,
 		launch,
 	}
+}
+
+fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> LaunchFixture {
+	launch_fixture(
+		h,
+		config,
+		&h.funded_keypair().expect("creator"),
+		activation_time,
+	)
 }
 
 fn create_launch(h: &Harness, config: &Config) -> LaunchFixture {
@@ -445,11 +462,23 @@ fn pool_addresses(config: &Config, launch: &LaunchFixture) -> PoolAddresses {
 	}
 }
 
+/// Which of the optional LP-recipient account pairs a graduation passes.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum LpRecipients {
+	/// Neither pair; graduation fails when either LP share is not zero.
+	Omitted,
+	/// Only the creator's pair, as a partner launching under their own
+	/// configuration must pass: their two payouts target one token account.
+	CreatorOnly,
+	/// Both pairs.
+	CreatorAndPartner,
+}
+
 fn graduate_instruction(
 	h: &Harness,
 	config: &Config,
 	launch: &LaunchFixture,
-	with_lp_recipients: bool,
+	recipients: LpRecipients,
 ) -> Instruction {
 	let addresses = pool_addresses(config, launch);
 	let mut accounts = Graduate::new(
@@ -471,13 +500,15 @@ fn graduate_instruction(
 		TOKEN_2022_PROGRAM,
 		TOKEN_PROGRAM,
 	);
-	if with_lp_recipients {
+	if recipients != LpRecipients::Omitted {
 		accounts.creator = Some(launch.creator.pubkey());
 		accounts.creator_lp_token = Some(ata(
 			&launch.creator.pubkey(),
 			&addresses.lp_mint,
 			&TOKEN_PROGRAM,
 		));
+	}
+	if recipients == LpRecipients::CreatorAndPartner {
 		accounts.partner = Some(config.partner.pubkey());
 		accounts.partner_lp_token = Some(ata(
 			&config.partner.pubkey(),
@@ -805,7 +836,12 @@ fn completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price() {
 		let launch = create_launch(&h, &config);
 		past_fee_decay(&h);
 		h.expect_custom_error(
-			&[graduate_instruction(&h, &config, &launch, false)],
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::Omitted,
+			)],
 			&[],
 			code::NOT_COMPLETED,
 		);
@@ -837,8 +873,16 @@ fn completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price() {
 		);
 
 		let supply_before = h.mint_supply(&launch.base_mint);
-		h.send(&[graduate_instruction(&h, &config, &launch, false)], &[])
-			.expect("graduate");
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::Omitted,
+			)],
+			&[],
+		)
+		.expect("graduate");
 		let addresses = pool_addresses(&config, &launch);
 		let graduated = launch_state(&h, &launch.launch);
 		assert_eq!(graduated.status, 2);
@@ -939,12 +983,25 @@ fn graduation_pays_lp_shares_to_the_creator_and_partner() {
 		past_fee_decay(&h);
 		complete(&h, &config, &launch);
 		h.expect_custom_error(
-			&[graduate_instruction(&h, &config, &launch, false)],
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::Omitted,
+			)],
 			&[],
 			code::MISSING_LP_ACCOUNT,
 		);
-		h.send(&[graduate_instruction(&h, &config, &launch, true)], &[])
-			.expect("graduate");
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::CreatorAndPartner,
+			)],
+			&[],
+		)
+		.expect("graduate");
 
 		let addresses = pool_addresses(&config, &launch);
 		let creator_lp = h.token_balance(&ata(
@@ -970,6 +1027,55 @@ fn graduation_pays_lp_shares_to_the_creator_and_partner() {
 			config.partner.pubkey().as_ref(),
 			"mode 1 pays the partner"
 		);
+		h.stop().expect("stop");
+	});
+}
+
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
+fn graduation_merges_lp_shares_when_the_creator_is_the_partner() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let config = create_config(
+			&h,
+			&amm,
+			Terms {
+				creator_lp_share: 100_000,
+				partner_lp_share: 200_000,
+				..Terms::default()
+			},
+		);
+		// The partner launches under their own configuration, so the creator
+		// and partner LP payouts would name the same associated token account
+		// twice; graduation must merge them into one payment instead.
+		let launch = launch_fixture(&h, &config, &config.partner, 0);
+		past_fee_decay(&h);
+		complete(&h, &config, &launch);
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::CreatorOnly,
+			)],
+			&[],
+		)
+		.expect("graduate");
+
+		let addresses = pool_addresses(&config, &launch);
+		let merged_lp = h.token_balance(&ata(
+			&launch.creator.pubkey(),
+			&addresses.lp_mint,
+			&TOKEN_PROGRAM,
+		));
+		assert!(merged_lp > 0);
+		assert_eq!(
+			h.mint_supply(&addresses.lp_mint),
+			merged_lp,
+			"everything else was burned"
+		);
+		assert_eq!(launch_state(&h, &launch.launch).status, 2);
 		h.stop().expect("stop");
 	});
 }
@@ -1114,6 +1220,14 @@ fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 		h.send(&[set_creator(&launch.creator.pubkey())], &[&launch.creator])
 			.expect("set creator");
 		assert_eq!(launch_state(&h, &launch.launch).creator, successor.pubkey());
+
+		// The default address can never sign, so it may not hold creator
+		// rights: fees and the vested allocation would be unclaimable forever.
+		let set_default = SetLaunchCreator::new(successor.pubkey(), launch.launch).instruction(
+			SetLaunchCreatorInstructionData::new(|data| data.new_creator = Pubkey::default())
+				.expect("data"),
+		);
+		h.expect_custom_error(&[set_default], &[&successor], code::DEFAULT_CREATOR);
 		h.stop().expect("stop");
 	});
 }
@@ -1195,7 +1309,7 @@ fn compute_units_stay_within_budget() {
 		// about 65,000 to 90,000. The ceiling covers the spread.
 		measure(
 			"graduate",
-			graduate_instruction(&h, &config, &launch, false),
+			graduate_instruction(&h, &config, &launch, LpRecipients::Omitted),
 			&[],
 			130_000,
 		);
