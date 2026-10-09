@@ -55,4 +55,8 @@ pub enum CurveError {
 	NothingToClaim = 20,
 	/// A creator or partner LP account is required because its LP share is not zero.
 	MissingLpAccount = 21,
+	/// The new creator may not be the default address, which can never sign or claim.
+	DefaultCreator = 22,
+	/// The launch price no longer matches the migration price derived from its configuration.
+	MigrationPriceMismatch = 23,
 }

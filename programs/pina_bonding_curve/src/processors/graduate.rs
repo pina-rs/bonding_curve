@@ -172,6 +172,13 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 		if launch.status != LaunchStatus::Completed {
 			return Err(CurveError::NotCompleted.into());
 		}
+		// Only a completing buy sets `Completed`, and it stops exactly at the
+		// derived price, so the two can never drift apart in practice. The
+		// check keeps any future state bug from silently seeding the pool at a
+		// stale price.
+		if launch.sqrt_price != config.migration_sqrt_price {
+			return Err(CurveError::MigrationPriceMismatch.into());
+		}
 		launch.assert_base_vault(self.base_vault)?;
 		launch.assert_quote_vault(self.quote_vault)?;
 		if self.base_mint.address() != &launch.base_mint
@@ -290,13 +297,26 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 			&[launch_signer.as_signer(), authority_signer.as_signer()],
 		)?;
 
-		// Split the LP the AMM minted to the launch.
+		// Split the LP the AMM minted to the launch. A partner who launches
+		// under their own configuration is both recipients: the two payouts
+		// would target the same associated token account, which the runtime
+		// rejects as a duplicate writable account, so the shares merge into
+		// one payment and the partner's accounts are omitted.
 		let lp_total = self
 			.launch_lp_token
 			.as_token_account_for_program(&token::ID)?
 			.amount();
-		let creator_lp = share_floor(lp_total, config.creator_lp_share)?;
-		let partner_lp = share_floor(lp_total, config.partner_lp_share)?;
+		let (creator_lp, partner_lp) = if launch.creator == config.authority {
+			let merged = share_floor(lp_total, config.creator_lp_share)?
+				.checked_add(share_floor(lp_total, config.partner_lp_share)?)
+				.ok_or(CurveError::MathOverflow)?;
+			(merged, 0)
+		} else {
+			(
+				share_floor(lp_total, config.creator_lp_share)?,
+				share_floor(lp_total, config.partner_lp_share)?,
+			)
+		};
 		let burned_lp = lp_total
 			.checked_sub(creator_lp)
 			.and_then(|value| value.checked_sub(partner_lp))

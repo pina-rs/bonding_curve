@@ -48,18 +48,21 @@ The program has no admin role and no pause switch. The upgrade authority is the 
 
 ## Attacks considered
 
-| Attack                                                           | Outcome                                                         | Test                                                                       |
-| ---------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Use an open AMM tier so anyone can create the pool first         | `InvalidAmmConfig` at configuration                             | `configurations_validate_their_terms`                                      |
-| Launch a mint the creator does not control                       | `InvalidBaseMint`                                               | `launches_mint_a_fixed_supply_and_revoke_the_mint_authority`               |
-| Launch a transfer-fee mint so transfers move less than accounted | `UnsupportedMint`                                               | `launches_mint_a_fixed_supply_and_revoke_the_mint_authority`               |
-| Snipe the launch block                                           | Pays the decaying opening fee                                   | `the_fee_starts_high_and_decays_and_trading_waits_for_activation`          |
-| Trade before activation                                          | `NotActive`                                                     | `the_fee_starts_high_and_decays_and_trading_waits_for_activation`          |
-| Trade after completion to move the graduation price              | `NotTrading`                                                    | `completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price` |
-| Graduate before completion                                       | `NotCompleted`                                                  | `completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price` |
-| Graduate without paying the configured LP recipients             | `MissingLpAccount`                                              | `graduation_pays_lp_shares_to_the_creator_and_partner`                     |
-| Claim someone else's fees or allocation                          | `Unauthorized`                                                  | `fees_and_vested_allocations_are_claimed_only_by_their_owners`             |
-| Create a configuration with unreachable or unfunded terms        | `InvalidMigrationThreshold`, `InvalidSupply`, `InvalidFeeRates` | `configurations_validate_their_terms`                                      |
+| Attack                                                                                        | Outcome                                                         | Test                                                                       |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Use an open AMM tier so anyone can create the pool first                                      | `InvalidAmmConfig` at configuration                             | `configurations_validate_their_terms`                                      |
+| Launch a mint the creator does not control                                                    | `InvalidBaseMint`                                               | `launches_mint_a_fixed_supply_and_revoke_the_mint_authority`               |
+| Launch a transfer-fee mint so transfers move less than accounted                              | `UnsupportedMint`                                               | `launches_mint_a_fixed_supply_and_revoke_the_mint_authority`               |
+| Snipe the launch block                                                                        | Pays the decaying opening fee                                   | `the_fee_starts_high_and_decays_and_trading_waits_for_activation`          |
+| Trade before activation                                                                       | `NotActive`                                                     | `the_fee_starts_high_and_decays_and_trading_waits_for_activation`          |
+| Trade after completion to move the graduation price                                           | `NotTrading`                                                    | `completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price` |
+| Graduate before completion                                                                    | `NotCompleted`                                                  | `completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price` |
+| Graduate without paying the configured LP recipients                                          | `MissingLpAccount`                                              | `graduation_pays_lp_shares_to_the_creator_and_partner`                     |
+| A partner launches under their own configuration, so both LP payouts target one token account | The shares merge into a single payment                          | `graduation_merges_lp_shares_when_the_creator_is_the_partner`              |
+| Hand creator rights to the default address, which can never sign                              | `DefaultCreator`                                                | `fees_and_vested_allocations_are_claimed_only_by_their_owners`             |
+| Graduate a launch whose price drifted from its configuration                                  | `MigrationPriceMismatch`                                        | held by the `Completed` state machine; asserted defensively                |
+| Claim someone else's fees or allocation                                                       | `Unauthorized`                                                  | `fees_and_vested_allocations_are_claimed_only_by_their_owners`             |
+| Create a configuration with unreachable or unfunded terms                                     | `InvalidMigrationThreshold`, `InvalidSupply`, `InvalidFeeRates` | `configurations_validate_their_terms`                                      |
 
 ## Static analysis
 
@@ -67,6 +70,7 @@ The program has no admin role and no pause switch. The upgrade authority is the 
 
 ## Known limitations
 
+- **AMM tier rates can change before graduation.** A configuration pins its tier's address, not its rates: the tier's authority may change them at any time, and a pool snapshots whatever the tier says when it is created. A graduating launch therefore pays the tier's current rates, bounded by the AMM's own 10% cap. Use a tier whose authority you trust, and re-read its rates before relying on them.
 - **Quote mints with freeze authorities.** A quote mint such as USDC can have a launch's quote vault frozen by its issuer, halting that launch. This is inherent to such mints; the curve accepts them because rejecting them would exclude most stablecoins. Base mints may never have a freeze authority.
 - **Configuration quality is the partner's responsibility.** The program enforces that terms are consistent and fundable, not that they are fair. Read a configuration before trading under it.
 - **Spot price is not an oracle.** The curve price moves with every trade and is manipulable within a transaction.
