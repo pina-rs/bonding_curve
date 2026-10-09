@@ -101,6 +101,14 @@ pub enum PinaBondingCurveError {
 	/// 21 - A creator or partner LP account is required because its LP share is not zero.
 	#[error("A creator or partner LP account is required because its LP share is not zero.")]
 	MissingLpAccount = 0x15,
+	/// The new creator may not be the default address, which can never sign or claim.
+	/// 22 - The new creator may not be the default address, which can never sign or claim.
+	#[error("The new creator may not be the default address, which can never sign or claim.")]
+	DefaultCreator = 0x16,
+	/// The launch price no longer matches the migration price derived from its configuration.
+	/// 23 - The launch price no longer matches the migration price derived from its configuration.
+	#[error("The launch price no longer matches the migration price derived from its configuration.")]
+	MigrationPriceMismatch = 0x17,
 }
 
 impl From<PinaBondingCurveError> for solana_program_error::ProgramError {
