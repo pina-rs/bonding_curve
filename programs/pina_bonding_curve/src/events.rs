@@ -27,6 +27,10 @@ pub enum CurveEvent {
 	Graduated = 5,
 	/// Fees or a vested allocation were paid out. See `Claimed`.
 	Claimed = 6,
+	/// A launch's creator rights moved. See `LaunchCreatorChanged`.
+	LaunchCreatorChanged = 7,
+	/// Donated quote above a launch's accounting was split into fees. See `DustSwept`.
+	DustSwept = 8,
 }
 
 /// Emitted by `CreateConfig`.
@@ -132,4 +136,28 @@ pub struct Claimed {
 	pub kind: u8,
 	/// Amount paid: quote for fees, base for the allocation.
 	pub amount: u64,
+}
+
+/// Emitted by `SetLaunchCreator`.
+#[event(discriminator = CurveEvent)]
+pub struct LaunchCreatorChanged {
+	/// The launch whose creator rights moved.
+	pub launch: Address,
+	/// The previous creator.
+	pub previous_creator: Address,
+	/// The new creator.
+	pub new_creator: Address,
+}
+
+/// Emitted by `SweepQuoteDust`.
+#[event(discriminator = CurveEvent)]
+pub struct DustSwept {
+	/// The launch whose quote vault was swept.
+	pub launch: Address,
+	/// Quote found in the vault above the launch's accounting.
+	pub amount: u64,
+	/// The dust credited to the creator's fees.
+	pub creator_fee: u64,
+	/// The dust credited to the partner's fees.
+	pub partner_fee: u64,
 }

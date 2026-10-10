@@ -40,6 +40,8 @@ use pina_bonding_curve_client::instructions::Sell;
 use pina_bonding_curve_client::instructions::SellInstructionData;
 use pina_bonding_curve_client::instructions::SetLaunchCreator;
 use pina_bonding_curve_client::instructions::SetLaunchCreatorInstructionData;
+use pina_bonding_curve_client::instructions::SweepQuoteDust;
+use pina_bonding_curve_client::instructions::SweepQuoteDustInstructionData;
 use pina_test::AccountMeta;
 use pina_test::Instruction;
 use pina_test::Keypair;
@@ -77,6 +79,7 @@ mod code {
 	pub const SLIPPAGE_EXCEEDED: u32 = 14;
 	pub const NOTHING_TO_CLAIM: u32 = 20;
 	pub const MISSING_LP_ACCOUNT: u32 = 21;
+	pub const DEFAULT_CREATOR: u32 = 22;
 }
 
 /// The economic terms a test configuration uses.
@@ -269,8 +272,15 @@ fn create_launch_instruction(
 	)
 }
 
-fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> LaunchFixture {
-	let creator = h.funded_keypair().expect("creator");
+/// Launch with an explicit creator key, who must also be the base mint's
+/// mint authority. Passing the partner's key models a partner launching
+/// under their own configuration.
+fn launch_fixture(
+	h: &Harness,
+	config: &Config,
+	creator: &Keypair,
+	activation_time: u64,
+) -> LaunchFixture {
 	let mint = Keypair::new();
 	h.create_mint_with_authority(
 		&mint,
@@ -289,17 +299,26 @@ fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> Launc
 			&base_mint,
 			activation_time,
 		)],
-		&[&creator],
+		&[creator],
 	)
 	.expect("create launch");
 	let launch = Launch::find_pda(&base_mint).0;
 	LaunchFixture {
 		base_vault: vault(&launch, &base_mint),
 		quote_vault: vault(&launch, &config.quote_mint),
-		creator,
+		creator: creator.insecure_clone(),
 		base_mint,
 		launch,
 	}
+}
+
+fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> LaunchFixture {
+	launch_fixture(
+		h,
+		config,
+		&h.funded_keypair().expect("creator"),
+		activation_time,
+	)
 }
 
 fn create_launch(h: &Harness, config: &Config) -> LaunchFixture {
@@ -445,11 +464,23 @@ fn pool_addresses(config: &Config, launch: &LaunchFixture) -> PoolAddresses {
 	}
 }
 
+/// Which of the optional LP-recipient account pairs a graduation passes.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum LpRecipients {
+	/// Neither pair; graduation fails when either LP share is not zero.
+	Omitted,
+	/// Only the creator's pair, as a partner launching under their own
+	/// configuration must pass: their two payouts target one token account.
+	CreatorOnly,
+	/// Both pairs.
+	CreatorAndPartner,
+}
+
 fn graduate_instruction(
 	h: &Harness,
 	config: &Config,
 	launch: &LaunchFixture,
-	with_lp_recipients: bool,
+	recipients: LpRecipients,
 ) -> Instruction {
 	let addresses = pool_addresses(config, launch);
 	let mut accounts = Graduate::new(
@@ -471,13 +502,15 @@ fn graduate_instruction(
 		TOKEN_2022_PROGRAM,
 		TOKEN_PROGRAM,
 	);
-	if with_lp_recipients {
+	if recipients != LpRecipients::Omitted {
 		accounts.creator = Some(launch.creator.pubkey());
 		accounts.creator_lp_token = Some(ata(
 			&launch.creator.pubkey(),
 			&addresses.lp_mint,
 			&TOKEN_PROGRAM,
 		));
+	}
+	if recipients == LpRecipients::CreatorAndPartner {
 		accounts.partner = Some(config.partner.pubkey());
 		accounts.partner_lp_token = Some(ata(
 			&config.partner.pubkey(),
@@ -486,6 +519,32 @@ fn graduate_instruction(
 		));
 	}
 	accounts.instruction(GraduateInstructionData::new(|_| {}).expect("graduate data"))
+}
+
+fn sweep_instruction(h: &Harness, config: &Config, launch: &LaunchFixture) -> Instruction {
+	let _ = h;
+	SweepQuoteDust::new(
+		config.address,
+		launch.launch,
+		launch.quote_vault,
+		TOKEN_PROGRAM,
+	)
+	.instruction(SweepQuoteDustInstructionData::new(|_| {}).expect("sweep data"))
+}
+
+/// Move quote straight between two token accounts with a raw transfer.
+fn quote_transfer(owner: &Pubkey, from: &Pubkey, to: &Pubkey, amount: u64) -> Instruction {
+	let mut data = vec![3u8];
+	data.extend_from_slice(&amount.to_le_bytes());
+	Instruction::new_with_bytes(
+		TOKEN_PROGRAM,
+		&data,
+		vec![
+			AccountMeta::new(*from, false),
+			AccountMeta::new(*to, false),
+			AccountMeta::new_readonly(*owner, true),
+		],
+	)
 }
 
 /// Buy until the launch completes and return the buyer.
@@ -805,7 +864,12 @@ fn completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price() {
 		let launch = create_launch(&h, &config);
 		past_fee_decay(&h);
 		h.expect_custom_error(
-			&[graduate_instruction(&h, &config, &launch, false)],
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::Omitted,
+			)],
 			&[],
 			code::NOT_COMPLETED,
 		);
@@ -837,8 +901,16 @@ fn completion_stops_trading_and_graduation_seeds_the_amm_at_the_curve_price() {
 		);
 
 		let supply_before = h.mint_supply(&launch.base_mint);
-		h.send(&[graduate_instruction(&h, &config, &launch, false)], &[])
-			.expect("graduate");
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::Omitted,
+			)],
+			&[],
+		)
+		.expect("graduate");
 		let addresses = pool_addresses(&config, &launch);
 		let graduated = launch_state(&h, &launch.launch);
 		assert_eq!(graduated.status, 2);
@@ -939,12 +1011,25 @@ fn graduation_pays_lp_shares_to_the_creator_and_partner() {
 		past_fee_decay(&h);
 		complete(&h, &config, &launch);
 		h.expect_custom_error(
-			&[graduate_instruction(&h, &config, &launch, false)],
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::Omitted,
+			)],
 			&[],
 			code::MISSING_LP_ACCOUNT,
 		);
-		h.send(&[graduate_instruction(&h, &config, &launch, true)], &[])
-			.expect("graduate");
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::CreatorAndPartner,
+			)],
+			&[],
+		)
+		.expect("graduate");
 
 		let addresses = pool_addresses(&config, &launch);
 		let creator_lp = h.token_balance(&ata(
@@ -970,6 +1055,55 @@ fn graduation_pays_lp_shares_to_the_creator_and_partner() {
 			config.partner.pubkey().as_ref(),
 			"mode 1 pays the partner"
 		);
+		h.stop().expect("stop");
+	});
+}
+
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
+fn graduation_merges_lp_shares_when_the_creator_is_the_partner() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let config = create_config(
+			&h,
+			&amm,
+			Terms {
+				creator_lp_share: 100_000,
+				partner_lp_share: 200_000,
+				..Terms::default()
+			},
+		);
+		// The partner launches under their own configuration, so the creator
+		// and partner LP payouts would name the same associated token account
+		// twice; graduation must merge them into one payment instead.
+		let launch = launch_fixture(&h, &config, &config.partner, 0);
+		past_fee_decay(&h);
+		complete(&h, &config, &launch);
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::CreatorOnly,
+			)],
+			&[],
+		)
+		.expect("graduate");
+
+		let addresses = pool_addresses(&config, &launch);
+		let merged_lp = h.token_balance(&ata(
+			&launch.creator.pubkey(),
+			&addresses.lp_mint,
+			&TOKEN_PROGRAM,
+		));
+		assert!(merged_lp > 0);
+		assert_eq!(
+			h.mint_supply(&addresses.lp_mint),
+			merged_lp,
+			"everything else was burned"
+		);
+		assert_eq!(launch_state(&h, &launch.launch).status, 2);
 		h.stop().expect("stop");
 	});
 }
@@ -1114,11 +1248,96 @@ fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 		h.send(&[set_creator(&launch.creator.pubkey())], &[&launch.creator])
 			.expect("set creator");
 		assert_eq!(launch_state(&h, &launch.launch).creator, successor.pubkey());
+
+		// The default address can never sign, so it may not hold creator
+		// rights: fees and the vested allocation would be unclaimable forever.
+		let set_default = SetLaunchCreator::new(successor.pubkey(), launch.launch).instruction(
+			SetLaunchCreatorInstructionData::new(|data| data.new_creator = Pubkey::default())
+				.expect("data"),
+		);
+		h.expect_custom_error(&[set_default], &[&successor], code::DEFAULT_CREATOR);
 		h.stop().expect("stop");
 	});
 }
 
 /// Compute-unit ceilings per instruction, about 20% above the measured cost.
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
+fn quote_dust_donated_to_a_vault_is_sweepable() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let config = create_config(&h, &amm, Terms::default());
+		let launch = create_launch(&h, &config);
+		past_fee_decay(&h);
+		let buyer = trader(&h, &config, &launch, 10_000_000_000);
+		h.send(
+			&[buy_instruction(
+				&config,
+				&launch,
+				&buyer.pubkey(),
+				1_000_000_000,
+				0,
+			)],
+			&[&buyer],
+		)
+		.expect("buy");
+
+		// Without a donation there is nothing above the launch's accounting.
+		h.expect_custom_error(
+			&[sweep_instruction(&h, &config, &launch)],
+			&[],
+			code::NOTHING_TO_CLAIM,
+		);
+
+		// Quote sent straight to the vault backs nothing until it is swept.
+		let donor = trader(&h, &config, &launch, 5_000_000);
+		let donor_quote = ata(&donor.pubkey(), &config.quote_mint, &TOKEN_PROGRAM);
+		h.send(
+			&[quote_transfer(
+				&donor.pubkey(),
+				&donor_quote,
+				&launch.quote_vault,
+				5_000_000,
+			)],
+			&[&donor],
+		)
+		.expect("donate");
+		let before = launch_state(&h, &launch.launch);
+		h.send(&[sweep_instruction(&h, &config, &launch)], &[])
+			.expect("sweep");
+		let state = launch_state(&h, &launch.launch);
+		let creator_fee = 5_000_000 * u64::from(CREATOR_FEE_SHARE) / 1_000_000;
+		assert_eq!(state.creator_fees - before.creator_fees, creator_fee);
+		assert_eq!(
+			state.partner_fees - before.partner_fees,
+			5_000_000 - creator_fee
+		);
+		assert_eq!(state.quote_reserve, before.quote_reserve);
+
+		// The swept dust claims together with the fees the trade accrued.
+		let expected_claim = state.creator_fees;
+		let creator_quote = h
+			.create_ata(&launch.creator.pubkey(), &config.quote_mint, &TOKEN_PROGRAM)
+			.expect("creator account");
+		h.send(
+			&[ClaimCreatorFees::new(
+				launch.creator.pubkey(),
+				config.address,
+				launch.launch,
+				launch.quote_vault,
+				creator_quote,
+				TOKEN_PROGRAM,
+			)
+			.instruction(ClaimCreatorFeesInstructionData::new(|_| {}).expect("data"))],
+			&[&launch.creator],
+		)
+		.expect("claim");
+		assert_eq!(h.token_balance(&creator_quote), expected_claim);
+		h.stop().expect("stop");
+	});
+}
+
 #[test]
 #[ignore = "run with `devenv shell test:surfpool`"]
 fn compute_units_stay_within_budget() {
@@ -1195,7 +1414,7 @@ fn compute_units_stay_within_budget() {
 		// about 65,000 to 90,000. The ceiling covers the spread.
 		measure(
 			"graduate",
-			graduate_instruction(&h, &config, &launch, false),
+			graduate_instruction(&h, &config, &launch, LpRecipients::Omitted),
 			&[],
 			130_000,
 		);

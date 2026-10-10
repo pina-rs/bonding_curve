@@ -91,6 +91,14 @@ const int pinaBondingCurveErrorNothingToClaim = 0x14; // 20
 /// Message: "A creator or partner LP account is required because its LP share is not zero."
 const int pinaBondingCurveErrorMissingLpAccount = 0x15; // 21
 
+/// The new creator may not be the default address, which can never sign or claim.
+/// Message: "The new creator may not be the default address, which can never sign or claim."
+const int pinaBondingCurveErrorDefaultCreator = 0x16; // 22
+
+/// The launch price no longer matches the migration price derived from its configuration.
+/// Message: "The launch price no longer matches the migration price derived from its configuration."
+const int pinaBondingCurveErrorMigrationPriceMismatch = 0x17; // 23
+
 /// Map of error codes to human-readable messages.
 const Map<int, String> _pinaBondingCurveErrorMessages = {
   pinaBondingCurveErrorInvalidCurve: 'Curve segments must be non-empty, strictly increasing, in range, and have positive liquidity.',
@@ -127,6 +135,8 @@ const Map<int, String> _pinaBondingCurveErrorMessages = {
       'The pool creator mode must be 0 (creator) or 1 (partner).',
   pinaBondingCurveErrorNothingToClaim: 'There is nothing to claim yet.',
   pinaBondingCurveErrorMissingLpAccount: 'A creator or partner LP account is required because its LP share is not zero.',
+  pinaBondingCurveErrorDefaultCreator: 'The new creator may not be the default address, which can never sign or claim.',
+  pinaBondingCurveErrorMigrationPriceMismatch: 'The launch price no longer matches the migration price derived from its configuration.',
 };
 
 /// Get the error message for a PinaBondingCurve program error code.

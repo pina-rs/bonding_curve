@@ -9,8 +9,10 @@
     "src/generated/events/claimed.rs",
     "src/generated/events/completed.rs",
     "src/generated/events/config_created.rs",
+    "src/generated/events/dust_swept.rs",
     "src/generated/events/graduated.rs",
     "src/generated/events/launch_created.rs",
+    "src/generated/events/launch_creator_changed.rs",
     "src/generated/events/mod.rs",
     "src/generated/events/traded.rs",
     "src/generated/instructions/buy.rs",
@@ -24,6 +26,7 @@
     "src/generated/instructions/mod.rs",
     "src/generated/instructions/sell.rs",
     "src/generated/instructions/set_launch_creator.rs",
+    "src/generated/instructions/sweep_quote_dust.rs",
     "src/generated/mod.rs",
     "src/generated/programs.rs",
     "src/lib.rs"

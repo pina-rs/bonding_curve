@@ -14,6 +14,8 @@ pub(crate) mod r#traded;
 pub(crate) mod r#completed;
 pub(crate) mod r#graduated;
 pub(crate) mod r#claimed;
+pub(crate) mod r#launch_creator_changed;
+pub(crate) mod r#dust_swept;
 
 pub use self::r#config_created::*;
 pub use self::r#launch_created::*;
@@ -21,3 +23,5 @@ pub use self::r#traded::*;
 pub use self::r#completed::*;
 pub use self::r#graduated::*;
 pub use self::r#claimed::*;
+pub use self::r#launch_creator_changed::*;
+pub use self::r#dust_swept::*;

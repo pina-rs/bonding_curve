@@ -39,6 +39,16 @@ import {
 	getClaimedEventDiscriminatorBytes,
 	type ClaimedEvent,
 } from "./claimed.js";
+import {
+	getLaunchCreatorChangedEventDecoder,
+	getLaunchCreatorChangedEventDiscriminatorBytes,
+	type LaunchCreatorChangedEvent,
+} from "./launchCreatorChanged.js";
+import {
+	getDustSweptEventDecoder,
+	getDustSweptEventDiscriminatorBytes,
+	type DustSweptEvent,
+} from "./dustSwept.js";
 
 /**
  * Decode one `configCreated` record: only records carrying this event's migration version decode.
@@ -382,6 +392,120 @@ export function parseClaimedEventFromLog(log: string): DecodedClaimedEvent | nul
 	return decodeClaimedEvent(bytes);
 }
 
+/**
+ * Decode one `launchCreatorChanged` record: only records carrying this event's migration version decode.
+ */
+export function decodeLaunchCreatorChangedEvent(
+	data: ReadonlyUint8Array | Uint8Array,
+): DecodedLaunchCreatorChangedEvent {
+	const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+	const discriminatorBytes = getLaunchCreatorChangedEventDiscriminatorBytes();
+	if (bytes.length < 2) {
+		throw new RangeError(
+			`the provided data is too short for the "LaunchCreatorChangedEvent" event envelope`,
+		);
+	}
+	for (let index = 0; index < 1; index += 1) {
+		if (bytes[index] !== discriminatorBytes[index]) {
+			throw new RangeError(
+				'the provided data does not match the "LaunchCreatorChangedEvent" event discriminator.',
+			);
+		}
+	}
+	const sourceVersion = bytes[1];
+	if (sourceVersion !== 0) {
+		throw new RangeError(
+			`event migration version mismatch: expected 0, received ${sourceVersion} (decode it with the event for that version, or regenerate this client)`,
+		);
+	}
+	return { name: "launchCreatorChanged", data: getLaunchCreatorChangedEventDecoder().decode(bytes) };
+}
+
+/** One log entry that named this event. */
+export type DecodedLaunchCreatorChangedEvent = { name: "launchCreatorChanged"; data: LaunchCreatorChangedEvent };
+
+/**
+ * Decode a `Program data:` log line, or return `null` when the line is not
+ * this event.
+ */
+export function parseLaunchCreatorChangedEventFromLog(log: string): DecodedLaunchCreatorChangedEvent | null {
+	const prefix = "Program data: ";
+	if (!log.startsWith(prefix)) {
+		return null;
+	}
+	const bytes = getBase64Encoder().encode(log.slice(prefix.length));
+	if (bytes.length < 2) {
+		return null;
+	}
+	const discriminatorBytes = getLaunchCreatorChangedEventDiscriminatorBytes();
+	for (let index = 0; index < 1; index += 1) {
+		if (bytes[index] !== discriminatorBytes[index]) {
+			return null;
+		}
+	}
+	if (bytes[1] !== 0) {
+		return null;
+	}
+	return decodeLaunchCreatorChangedEvent(bytes);
+}
+
+/**
+ * Decode one `dustSwept` record: only records carrying this event's migration version decode.
+ */
+export function decodeDustSweptEvent(
+	data: ReadonlyUint8Array | Uint8Array,
+): DecodedDustSweptEvent {
+	const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+	const discriminatorBytes = getDustSweptEventDiscriminatorBytes();
+	if (bytes.length < 2) {
+		throw new RangeError(
+			`the provided data is too short for the "DustSweptEvent" event envelope`,
+		);
+	}
+	for (let index = 0; index < 1; index += 1) {
+		if (bytes[index] !== discriminatorBytes[index]) {
+			throw new RangeError(
+				'the provided data does not match the "DustSweptEvent" event discriminator.',
+			);
+		}
+	}
+	const sourceVersion = bytes[1];
+	if (sourceVersion !== 0) {
+		throw new RangeError(
+			`event migration version mismatch: expected 0, received ${sourceVersion} (decode it with the event for that version, or regenerate this client)`,
+		);
+	}
+	return { name: "dustSwept", data: getDustSweptEventDecoder().decode(bytes) };
+}
+
+/** One log entry that named this event. */
+export type DecodedDustSweptEvent = { name: "dustSwept"; data: DustSweptEvent };
+
+/**
+ * Decode a `Program data:` log line, or return `null` when the line is not
+ * this event.
+ */
+export function parseDustSweptEventFromLog(log: string): DecodedDustSweptEvent | null {
+	const prefix = "Program data: ";
+	if (!log.startsWith(prefix)) {
+		return null;
+	}
+	const bytes = getBase64Encoder().encode(log.slice(prefix.length));
+	if (bytes.length < 2) {
+		return null;
+	}
+	const discriminatorBytes = getDustSweptEventDiscriminatorBytes();
+	for (let index = 0; index < 1; index += 1) {
+		if (bytes[index] !== discriminatorBytes[index]) {
+			return null;
+		}
+	}
+	if (bytes[1] !== 0) {
+		return null;
+	}
+	return decodeDustSweptEvent(bytes);
+}
+
 
 /**
  * Explain a `Program data:` line that names a migration-aware event but that
@@ -423,6 +547,16 @@ function unrecognizedEventVersion(log: string): string | null {
 			? 'event "claimed" log is too short for its version envelope'
 			: `event "claimed" log carries migration version ${bytes[1]}, which this client cannot decode; regenerate it`;
 	}
+	if (bytes.length >= 1 && bytes[0] === 7) {
+		return bytes.length < 2
+			? 'event "launchCreatorChanged" log is too short for its version envelope'
+			: `event "launchCreatorChanged" log carries migration version ${bytes[1]}, which this client cannot decode; regenerate it`;
+	}
+	if (bytes.length >= 1 && bytes[0] === 8) {
+		return bytes.length < 2
+			? 'event "dustSwept" log is too short for its version envelope'
+			: `event "dustSwept" log carries migration version ${bytes[1]}, which this client cannot decode; regenerate it`;
+	}
 	return null;
 }
 
@@ -433,7 +567,9 @@ export type DecodedPinaBondingCurveEvent =
 	| DecodedTradedEvent
 	| DecodedCompletedEvent
 	| DecodedGraduatedEvent
-	| DecodedClaimedEvent;
+	| DecodedClaimedEvent
+	| DecodedLaunchCreatorChangedEvent
+	| DecodedDustSweptEvent;
 
 /** The program whose invocation frames emit the events decoded here. */
 export const PINA_BONDING_CURVE_EVENT_SOURCE_ADDRESS = "CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9";
@@ -507,6 +643,16 @@ export function parsePinaBondingCurveEventsFromLogs(
 		const claimed = parseClaimedEventFromLog(log);
 		if (claimed !== null) {
 			discovered.push(claimed);
+			continue;
+		}
+		const launchCreatorChanged = parseLaunchCreatorChangedEventFromLog(log);
+		if (launchCreatorChanged !== null) {
+			discovered.push(launchCreatorChanged);
+			continue;
+		}
+		const dustSwept = parseDustSweptEventFromLog(log);
+		if (dustSwept !== null) {
+			discovered.push(dustSwept);
 			continue;
 		}
 		const unknownVersion = unrecognizedEventVersion(log);

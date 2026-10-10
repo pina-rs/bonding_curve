@@ -9,7 +9,7 @@
 import { assertIsInstructionWithAccounts, containsBytes, extendClient, getU8Encoder, SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT, SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, SolanaError, type Address, type ClientWithRpc, type ClientWithTransactionPlanning, type ClientWithTransactionSending, type ExtendedClient, type GetAccountInfoApi, type GetMultipleAccountsApi, type Instruction, type InstructionWithData, type ReadonlyUint8Array } from '@solana/kit';
 import { addSelfFetchFunctions, addSelfPlanAndSendFunctions, type SelfFetchFunctions, type SelfPlanAndSendFunctions } from '@solana/program-client-core';
 import { getLaunchCodec, getLaunchConfigCodec, type Launch, type LaunchArgs, type LaunchConfig, type LaunchConfigArgs } from '../accounts';
-import { getBuyInstruction, getClaimCreatorAllocationInstruction, getClaimCreatorFeesInstruction, getClaimPartnerFeesInstruction, getCreateConfigInstruction, getCreateLaunchInstructionAsync, getGraduateInstruction, getSellInstruction, getSetLaunchCreatorInstruction, parseBuyInstruction, parseClaimCreatorAllocationInstruction, parseClaimCreatorFeesInstruction, parseClaimPartnerFeesInstruction, parseCreateConfigInstruction, parseCreateLaunchInstruction, parseGraduateInstruction, parseSellInstruction, parseSetLaunchCreatorInstruction, type BuyInput, type ClaimCreatorAllocationInput, type ClaimCreatorFeesInput, type ClaimPartnerFeesInput, type CreateConfigInput, type CreateLaunchAsyncInput, type GraduateInput, type ParsedBuyInstruction, type ParsedClaimCreatorAllocationInstruction, type ParsedClaimCreatorFeesInstruction, type ParsedClaimPartnerFeesInstruction, type ParsedCreateConfigInstruction, type ParsedCreateLaunchInstruction, type ParsedGraduateInstruction, type ParsedSellInstruction, type ParsedSetLaunchCreatorInstruction, type SellInput, type SetLaunchCreatorInput } from '../instructions';
+import { getBuyInstruction, getClaimCreatorAllocationInstruction, getClaimCreatorFeesInstruction, getClaimPartnerFeesInstruction, getCreateConfigInstruction, getCreateLaunchInstructionAsync, getGraduateInstruction, getSellInstruction, getSetLaunchCreatorInstruction, getSweepQuoteDustInstruction, parseBuyInstruction, parseClaimCreatorAllocationInstruction, parseClaimCreatorFeesInstruction, parseClaimPartnerFeesInstruction, parseCreateConfigInstruction, parseCreateLaunchInstruction, parseGraduateInstruction, parseSellInstruction, parseSetLaunchCreatorInstruction, parseSweepQuoteDustInstruction, type BuyInput, type ClaimCreatorAllocationInput, type ClaimCreatorFeesInput, type ClaimPartnerFeesInput, type CreateConfigInput, type CreateLaunchAsyncInput, type GraduateInput, type ParsedBuyInstruction, type ParsedClaimCreatorAllocationInstruction, type ParsedClaimCreatorFeesInstruction, type ParsedClaimPartnerFeesInstruction, type ParsedCreateConfigInstruction, type ParsedCreateLaunchInstruction, type ParsedGraduateInstruction, type ParsedSellInstruction, type ParsedSetLaunchCreatorInstruction, type ParsedSweepQuoteDustInstruction, type SellInput, type SetLaunchCreatorInput, type SweepQuoteDustInput } from '../instructions';
 import { getMigrateInstruction, type MigrateInput } from "../instructions";
 
 import { findAmmAuthorityPda, findLaunchConfigPda, findLaunchPda, findLaunchVaultPda } from '../pdas';
@@ -25,7 +25,7 @@ if (containsBytes(data, getU8Encoder().encode(2), 0) && containsBytes(data, getU
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT, { accountData: data, programName: "pinaBondingCurve" });
 }
 
-export enum PinaBondingCurveEvent { ConfigCreated, LaunchCreated, Traded, Completed, Graduated, Claimed }
+export enum PinaBondingCurveEvent { ConfigCreated, LaunchCreated, Traded, Completed, Graduated, Claimed, LaunchCreatorChanged, DustSwept }
 
 export function identifyPinaBondingCurveEvent(event: { data: ReadonlyUint8Array } | ReadonlyUint8Array): PinaBondingCurveEvent {
     const data = 'data' in event ? event.data : event;
@@ -35,10 +35,12 @@ if (containsBytes(data, getU8Encoder().encode(3), 0) && containsBytes(data, getU
 if (containsBytes(data, getU8Encoder().encode(4), 0) && containsBytes(data, getU8Encoder().encode(0), 1)) { return PinaBondingCurveEvent.Completed; }
 if (containsBytes(data, getU8Encoder().encode(5), 0) && containsBytes(data, getU8Encoder().encode(0), 1)) { return PinaBondingCurveEvent.Graduated; }
 if (containsBytes(data, getU8Encoder().encode(6), 0) && containsBytes(data, getU8Encoder().encode(0), 1)) { return PinaBondingCurveEvent.Claimed; }
+if (containsBytes(data, getU8Encoder().encode(7), 0) && containsBytes(data, getU8Encoder().encode(0), 1)) { return PinaBondingCurveEvent.LaunchCreatorChanged; }
+if (containsBytes(data, getU8Encoder().encode(8), 0) && containsBytes(data, getU8Encoder().encode(0), 1)) { return PinaBondingCurveEvent.DustSwept; }
     throw new Error('The provided event could not be identified as a pinaBondingCurve event.');
 }
 
-export enum PinaBondingCurveInstruction { CreateConfig, CreateLaunch, Buy, Sell, Graduate, ClaimPartnerFees, ClaimCreatorFees, ClaimCreatorAllocation, SetLaunchCreator }
+export enum PinaBondingCurveInstruction { CreateConfig, CreateLaunch, Buy, Sell, Graduate, ClaimPartnerFees, ClaimCreatorFees, ClaimCreatorAllocation, SetLaunchCreator, SweepQuoteDust }
 
 export function identifyPinaBondingCurveInstruction(instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array): PinaBondingCurveInstruction {
     const data = 'data' in instruction ? instruction.data : instruction;
@@ -51,6 +53,7 @@ if (containsBytes(data, getU8Encoder().encode(5), 0)) { return PinaBondingCurveI
 if (containsBytes(data, getU8Encoder().encode(6), 0)) { return PinaBondingCurveInstruction.ClaimCreatorFees; }
 if (containsBytes(data, getU8Encoder().encode(7), 0)) { return PinaBondingCurveInstruction.ClaimCreatorAllocation; }
 if (containsBytes(data, getU8Encoder().encode(8), 0)) { return PinaBondingCurveInstruction.SetLaunchCreator; }
+if (containsBytes(data, getU8Encoder().encode(9), 0)) { return PinaBondingCurveInstruction.SweepQuoteDust; }
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, { instructionData: data, programName: "pinaBondingCurve" });
 }
 
@@ -64,6 +67,7 @@ export type ParsedPinaBondingCurveInstruction<TProgram extends string = 'Curveqe
 | { instructionType: PinaBondingCurveInstruction.ClaimCreatorFees } & ParsedClaimCreatorFeesInstruction<TProgram>
 | { instructionType: PinaBondingCurveInstruction.ClaimCreatorAllocation } & ParsedClaimCreatorAllocationInstruction<TProgram>
 | { instructionType: PinaBondingCurveInstruction.SetLaunchCreator } & ParsedSetLaunchCreatorInstruction<TProgram>
+| { instructionType: PinaBondingCurveInstruction.SweepQuoteDust } & ParsedSweepQuoteDustInstruction<TProgram>
 
 
         export function parsePinaBondingCurveInstruction<TProgram extends string>(
@@ -90,6 +94,8 @@ case PinaBondingCurveInstruction.ClaimCreatorAllocation: { assertIsInstructionWi
 return { instructionType: PinaBondingCurveInstruction.ClaimCreatorAllocation, ...parseClaimCreatorAllocationInstruction(instruction) }; }
 case PinaBondingCurveInstruction.SetLaunchCreator: { assertIsInstructionWithAccounts(instruction);
 return { instructionType: PinaBondingCurveInstruction.SetLaunchCreator, ...parseSetLaunchCreatorInstruction(instruction) }; }
+case PinaBondingCurveInstruction.SweepQuoteDust: { assertIsInstructionWithAccounts(instruction);
+return { instructionType: PinaBondingCurveInstruction.SweepQuoteDust, ...parseSweepQuoteDustInstruction(instruction) }; }
                 default: throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, { instructionType: instructionType as string, programName: "pinaBondingCurve" });
             }
         }
@@ -98,7 +104,7 @@ export type PinaBondingCurvePlugin = { accounts: PinaBondingCurvePluginAccounts;
 
 export type PinaBondingCurvePluginAccounts = { launchConfig: ReturnType<typeof getLaunchConfigCodec> & SelfFetchFunctions<LaunchConfigArgs, LaunchConfig>; launch: ReturnType<typeof getLaunchCodec> & SelfFetchFunctions<LaunchArgs, Launch>; }
 
-export type PinaBondingCurvePluginInstructions = { createConfig: (input: CreateConfigInput) => ReturnType<typeof getCreateConfigInstruction> & SelfPlanAndSendFunctions; createLaunch: (input: CreateLaunchAsyncInput) => ReturnType<typeof getCreateLaunchInstructionAsync> & SelfPlanAndSendFunctions; buy: (input: BuyInput) => ReturnType<typeof getBuyInstruction> & SelfPlanAndSendFunctions; sell: (input: SellInput) => ReturnType<typeof getSellInstruction> & SelfPlanAndSendFunctions; graduate: (input: GraduateInput) => ReturnType<typeof getGraduateInstruction> & SelfPlanAndSendFunctions; claimPartnerFees: (input: ClaimPartnerFeesInput) => ReturnType<typeof getClaimPartnerFeesInstruction> & SelfPlanAndSendFunctions; claimCreatorFees: (input: ClaimCreatorFeesInput) => ReturnType<typeof getClaimCreatorFeesInstruction> & SelfPlanAndSendFunctions; claimCreatorAllocation: (input: ClaimCreatorAllocationInput) => ReturnType<typeof getClaimCreatorAllocationInstruction> & SelfPlanAndSendFunctions; setLaunchCreator: (input: SetLaunchCreatorInput) => ReturnType<typeof getSetLaunchCreatorInstruction> & SelfPlanAndSendFunctions; }
+export type PinaBondingCurvePluginInstructions = { createConfig: (input: CreateConfigInput) => ReturnType<typeof getCreateConfigInstruction> & SelfPlanAndSendFunctions; createLaunch: (input: CreateLaunchAsyncInput) => ReturnType<typeof getCreateLaunchInstructionAsync> & SelfPlanAndSendFunctions; buy: (input: BuyInput) => ReturnType<typeof getBuyInstruction> & SelfPlanAndSendFunctions; sell: (input: SellInput) => ReturnType<typeof getSellInstruction> & SelfPlanAndSendFunctions; graduate: (input: GraduateInput) => ReturnType<typeof getGraduateInstruction> & SelfPlanAndSendFunctions; claimPartnerFees: (input: ClaimPartnerFeesInput) => ReturnType<typeof getClaimPartnerFeesInstruction> & SelfPlanAndSendFunctions; claimCreatorFees: (input: ClaimCreatorFeesInput) => ReturnType<typeof getClaimCreatorFeesInstruction> & SelfPlanAndSendFunctions; claimCreatorAllocation: (input: ClaimCreatorAllocationInput) => ReturnType<typeof getClaimCreatorAllocationInstruction> & SelfPlanAndSendFunctions; setLaunchCreator: (input: SetLaunchCreatorInput) => ReturnType<typeof getSetLaunchCreatorInstruction> & SelfPlanAndSendFunctions; sweepQuoteDust: (input: SweepQuoteDustInput) => ReturnType<typeof getSweepQuoteDustInstruction> & SelfPlanAndSendFunctions; }
 
 export type PinaBondingCurvePluginPdas = { launchConfig: typeof findLaunchConfigPda; launch: typeof findLaunchPda; launchVault: typeof findLaunchVaultPda; ammAuthority: typeof findAmmAuthorityPda; }
 
@@ -108,6 +114,6 @@ export function pinaBondingCurveProgram() {
     return <T extends PinaBondingCurvePluginRequirements>(client: T): ExtendedClient<T, { pinaBondingCurve: PinaBondingCurvePlugin }> => {
         return extendClient(client, { pinaBondingCurve: <PinaBondingCurvePlugin>{ accounts: { launchConfig: addSelfFetchFunctions(client, getLaunchConfigCodec()), launch: addSelfFetchFunctions(client, getLaunchCodec()) }, instructions: { 
 			migrate: (input: MigrateInput) =>
-				addSelfPlanAndSendFunctions(client, getMigrateInstruction(input)),createConfig: input => addSelfPlanAndSendFunctions(client, getCreateConfigInstruction(input)), createLaunch: input => addSelfPlanAndSendFunctions(client, getCreateLaunchInstructionAsync(input)), buy: input => addSelfPlanAndSendFunctions(client, getBuyInstruction(input)), sell: input => addSelfPlanAndSendFunctions(client, getSellInstruction(input)), graduate: input => addSelfPlanAndSendFunctions(client, getGraduateInstruction(input)), claimPartnerFees: input => addSelfPlanAndSendFunctions(client, getClaimPartnerFeesInstruction(input)), claimCreatorFees: input => addSelfPlanAndSendFunctions(client, getClaimCreatorFeesInstruction(input)), claimCreatorAllocation: input => addSelfPlanAndSendFunctions(client, getClaimCreatorAllocationInstruction(input)), setLaunchCreator: input => addSelfPlanAndSendFunctions(client, getSetLaunchCreatorInstruction(input)) }, pdas: { launchConfig: findLaunchConfigPda, launch: findLaunchPda, launchVault: findLaunchVaultPda, ammAuthority: findAmmAuthorityPda }, identifyAccount: identifyPinaBondingCurveAccount, identifyInstruction: identifyPinaBondingCurveInstruction, parseInstruction: parsePinaBondingCurveInstruction } });
+				addSelfPlanAndSendFunctions(client, getMigrateInstruction(input)),createConfig: input => addSelfPlanAndSendFunctions(client, getCreateConfigInstruction(input)), createLaunch: input => addSelfPlanAndSendFunctions(client, getCreateLaunchInstructionAsync(input)), buy: input => addSelfPlanAndSendFunctions(client, getBuyInstruction(input)), sell: input => addSelfPlanAndSendFunctions(client, getSellInstruction(input)), graduate: input => addSelfPlanAndSendFunctions(client, getGraduateInstruction(input)), claimPartnerFees: input => addSelfPlanAndSendFunctions(client, getClaimPartnerFeesInstruction(input)), claimCreatorFees: input => addSelfPlanAndSendFunctions(client, getClaimCreatorFeesInstruction(input)), claimCreatorAllocation: input => addSelfPlanAndSendFunctions(client, getClaimCreatorAllocationInstruction(input)), setLaunchCreator: input => addSelfPlanAndSendFunctions(client, getSetLaunchCreatorInstruction(input)), sweepQuoteDust: input => addSelfPlanAndSendFunctions(client, getSweepQuoteDustInstruction(input)) }, pdas: { launchConfig: findLaunchConfigPda, launch: findLaunchPda, launchVault: findLaunchVaultPda, ammAuthority: findAmmAuthorityPda }, identifyAccount: identifyPinaBondingCurveAccount, identifyInstruction: identifyPinaBondingCurveInstruction, parseInstruction: parsePinaBondingCurveInstruction } });
     };
 }

@@ -416,6 +416,58 @@
 				}
 			]
 		},
+		"event:1:07": {
+			"rustName": "LaunchCreatorChanged",
+			"versions": [
+				{
+					"schema": {
+						"layout": "fixed",
+						"fields": [
+							{
+								"name": "launch",
+								"rustType": "Address"
+							},
+							{
+								"name": "previous_creator",
+								"rustType": "Address"
+							},
+							{
+								"name": "new_creator",
+								"rustType": "Address"
+							}
+						]
+					}
+				}
+			]
+		},
+		"event:1:08": {
+			"rustName": "DustSwept",
+			"versions": [
+				{
+					"schema": {
+						"layout": "fixed",
+						"fields": [
+							{
+								"name": "launch",
+								"rustType": "Address"
+							},
+							{
+								"name": "amount",
+								"rustType": "u64"
+							},
+							{
+								"name": "creator_fee",
+								"rustType": "u64"
+							},
+							{
+								"name": "partner_fee",
+								"rustType": "u64"
+							}
+						]
+					}
+				}
+			]
+		},
 		"instruction:1:00": {
 			"rustName": "CreateConfigInstruction",
 			"envelope": false,
@@ -964,6 +1016,36 @@
 								"name": "launch",
 								"writable": true,
 								"pda": "launch"
+							}
+						]
+					}
+				}
+			]
+		},
+		"instruction:1:09": {
+			"rustName": "SweepQuoteDustInstruction",
+			"envelope": false,
+			"versions": [
+				{
+					"schema": {
+						"layout": "fixed",
+						"fields": []
+					},
+					"process": {
+						"accounts": [
+							{
+								"name": "config"
+							},
+							{
+								"name": "launch",
+								"writable": true,
+								"pda": "launch"
+							},
+							{
+								"name": "quote_vault"
+							},
+							{
+								"name": "quote_token_program"
 							}
 						]
 					}
