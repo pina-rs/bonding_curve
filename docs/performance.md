@@ -17,6 +17,33 @@ Costs that derive PDAs vary with the addresses involved: every extra bump attemp
 
 A buy's cost grows slightly with the number of segments it crosses, because each crossing prices one more segment. Most buys stay within one segment.
 
+## Continuous benchmarking
+
+Every pull request that touches the program, the clients, the vendored AMM, or the harness is benchmarked automatically. The `performance` workflow builds the real SBF binary for the pull request **and** for its base — each side against its own pinned `amm.rev` — runs the all-instructions journey three times against each binary on an offline Surfnet, and posts one consolidated comment on the pull request:
+
+- the deployed binary size, base against head;
+- every instruction's compute units, base against head, as the median of three runs.
+
+The journey uses fixed keypair seeds for every address that feeds a PDA derivation, so identical binaries measure identical compute units and the comparison shows program changes, not address luck.
+
+The policy in `scripts/benchmark-policy.json` gates the pull request:
+
+- any increase in the deployed binary's size fails the check;
+- any instruction whose compute units rise by more than **2%** fails the check;
+- an instruction that loses its measurement fails the check;
+- a new instruction is reported as a new baseline and never blocks.
+
+A regression blocks auto-merge until the pull request carries the `performance-approved` label — the maintainer's explicit permission for that trade. Re-run the numbers locally with:
+
+```sh
+devenv shell -- pnpm exec tsx scripts/benchmark.ts --out target/perf/head
+devenv shell -- pnpm exec tsx scripts/compare-benchmarks.ts \
+  --base <base-dir> --head target/perf/head \
+  --markdown report.md --json report.json
+```
+
+The per-instruction ceilings in the end-to-end suite stay as they are: they catch a regression even when the workflow is skipped.
+
 ## Program size
 
 About **125 KB** for the deployed `pina_bonding_curve.so`, built with fat LTO, one codegen unit, and `opt-level = 3`. Rent for the program-data account scales with this size. The largest contributors are the 256-bit arithmetic that keeps every curve calculation exact and the graduation path's AMM integration.
