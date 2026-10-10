@@ -8,6 +8,8 @@ export 'traded.dart';
 export 'completed.dart';
 export 'graduated.dart';
 export 'claimed.dart';
+export 'launch_creator_changed.dart';
+export 'dust_swept.dart';
 
 import 'event_log.dart';
 import 'config_created.dart';
@@ -16,6 +18,8 @@ import 'traded.dart';
 import 'completed.dart';
 import 'graduated.dart';
 import 'claimed.dart';
+import 'launch_creator_changed.dart';
+import 'dust_swept.dart';
 
 /// The program whose invocation frames emit the events decoded here.
 const pinaBondingCurveEventSourceAddress =
@@ -91,6 +95,16 @@ List<PinaBondingCurveEvent> parsePinaBondingCurveEventsFromLogs(
       discovered.add(claimed);
       continue;
     }
+    final launchCreatorChanged = parseLaunchCreatorChangedEventFromLog(log);
+    if (launchCreatorChanged != null) {
+      discovered.add(launchCreatorChanged);
+      continue;
+    }
+    final dustSwept = parseDustSweptEventFromLog(log);
+    if (dustSwept != null) {
+      discovered.add(dustSwept);
+      continue;
+    }
     final unknownVersion = _unrecognizedEventVersion(log);
     if (unknownVersion != null) {
       throw RangeError(unknownVersion);
@@ -135,6 +149,16 @@ String? _unrecognizedEventVersion(String log) {
     return bytes.length < 2
         ? 'event "claimed" log is too short for its version envelope'
         : 'event "claimed" log carries migration version ${bytes[1]}, which this client cannot decode; regenerate it';
+  }
+  if (bytes.length >= 1 && bytes[0] == 7) {
+    return bytes.length < 2
+        ? 'event "launchCreatorChanged" log is too short for its version envelope'
+        : 'event "launchCreatorChanged" log carries migration version ${bytes[1]}, which this client cannot decode; regenerate it';
+  }
+  if (bytes.length >= 1 && bytes[0] == 8) {
+    return bytes.length < 2
+        ? 'event "dustSwept" log is too short for its version envelope'
+        : 'event "dustSwept" log carries migration version ${bytes[1]}, which this client cannot decode; regenerate it';
   }
   return null;
 }

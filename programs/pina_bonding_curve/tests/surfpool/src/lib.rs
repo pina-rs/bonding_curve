@@ -40,6 +40,8 @@ use pina_bonding_curve_client::instructions::Sell;
 use pina_bonding_curve_client::instructions::SellInstructionData;
 use pina_bonding_curve_client::instructions::SetLaunchCreator;
 use pina_bonding_curve_client::instructions::SetLaunchCreatorInstructionData;
+use pina_bonding_curve_client::instructions::SweepQuoteDust;
+use pina_bonding_curve_client::instructions::SweepQuoteDustInstructionData;
 use pina_test::AccountMeta;
 use pina_test::Instruction;
 use pina_test::Keypair;
@@ -517,6 +519,32 @@ fn graduate_instruction(
 		));
 	}
 	accounts.instruction(GraduateInstructionData::new(|_| {}).expect("graduate data"))
+}
+
+fn sweep_instruction(h: &Harness, config: &Config, launch: &LaunchFixture) -> Instruction {
+	let _ = h;
+	SweepQuoteDust::new(
+		config.address,
+		launch.launch,
+		launch.quote_vault,
+		TOKEN_PROGRAM,
+	)
+	.instruction(SweepQuoteDustInstructionData::new(|_| {}).expect("sweep data"))
+}
+
+/// Move quote straight between two token accounts with a raw transfer.
+fn quote_transfer(owner: &Pubkey, from: &Pubkey, to: &Pubkey, amount: u64) -> Instruction {
+	let mut data = vec![3u8];
+	data.extend_from_slice(&amount.to_le_bytes());
+	Instruction::new_with_bytes(
+		TOKEN_PROGRAM,
+		&data,
+		vec![
+			AccountMeta::new(*from, false),
+			AccountMeta::new(*to, false),
+			AccountMeta::new_readonly(*owner, true),
+		],
+	)
 }
 
 /// Buy until the launch completes and return the buyer.
@@ -1233,6 +1261,83 @@ fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 }
 
 /// Compute-unit ceilings per instruction, about 20% above the measured cost.
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
+fn quote_dust_donated_to_a_vault_is_sweepable() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let config = create_config(&h, &amm, Terms::default());
+		let launch = create_launch(&h, &config);
+		past_fee_decay(&h);
+		let buyer = trader(&h, &config, &launch, 10_000_000_000);
+		h.send(
+			&[buy_instruction(
+				&config,
+				&launch,
+				&buyer.pubkey(),
+				1_000_000_000,
+				0,
+			)],
+			&[&buyer],
+		)
+		.expect("buy");
+
+		// Without a donation there is nothing above the launch's accounting.
+		h.expect_custom_error(
+			&[sweep_instruction(&h, &config, &launch)],
+			&[],
+			code::NOTHING_TO_CLAIM,
+		);
+
+		// Quote sent straight to the vault backs nothing until it is swept.
+		let donor = trader(&h, &config, &launch, 5_000_000);
+		let donor_quote = ata(&donor.pubkey(), &config.quote_mint, &TOKEN_PROGRAM);
+		h.send(
+			&[quote_transfer(
+				&donor.pubkey(),
+				&donor_quote,
+				&launch.quote_vault,
+				5_000_000,
+			)],
+			&[&donor],
+		)
+		.expect("donate");
+		let before = launch_state(&h, &launch.launch);
+		h.send(&[sweep_instruction(&h, &config, &launch)], &[])
+			.expect("sweep");
+		let state = launch_state(&h, &launch.launch);
+		let creator_fee = 5_000_000 * u64::from(CREATOR_FEE_SHARE) / 1_000_000;
+		assert_eq!(state.creator_fees - before.creator_fees, creator_fee);
+		assert_eq!(
+			state.partner_fees - before.partner_fees,
+			5_000_000 - creator_fee
+		);
+		assert_eq!(state.quote_reserve, before.quote_reserve);
+
+		// The swept dust claims together with the fees the trade accrued.
+		let expected_claim = state.creator_fees;
+		let creator_quote = h
+			.create_ata(&launch.creator.pubkey(), &config.quote_mint, &TOKEN_PROGRAM)
+			.expect("creator account");
+		h.send(
+			&[ClaimCreatorFees::new(
+				launch.creator.pubkey(),
+				config.address,
+				launch.launch,
+				launch.quote_vault,
+				creator_quote,
+				TOKEN_PROGRAM,
+			)
+			.instruction(ClaimCreatorFeesInstructionData::new(|_| {}).expect("data"))],
+			&[&launch.creator],
+		)
+		.expect("claim");
+		assert_eq!(h.token_balance(&creator_quote), expected_claim);
+		h.stop().expect("stop");
+	});
+}
+
 #[test]
 #[ignore = "run with `devenv shell test:surfpool`"]
 fn compute_units_stay_within_budget() {

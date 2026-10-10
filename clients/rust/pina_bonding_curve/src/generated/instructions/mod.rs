@@ -17,6 +17,7 @@ pub(crate) mod r#claim_partner_fees;
 pub(crate) mod r#claim_creator_fees;
 pub(crate) mod r#claim_creator_allocation;
 pub(crate) mod r#set_launch_creator;
+pub(crate) mod r#sweep_quote_dust;
 pub(crate) mod r#migrate;
 
 pub use self::r#create_config::*;
@@ -28,4 +29,5 @@ pub use self::r#claim_partner_fees::*;
 pub use self::r#claim_creator_fees::*;
 pub use self::r#claim_creator_allocation::*;
 pub use self::r#set_launch_creator::*;
+pub use self::r#sweep_quote_dust::*;
 pub use self::r#migrate::*;

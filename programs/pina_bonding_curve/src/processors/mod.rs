@@ -10,10 +10,12 @@ mod common;
 mod config;
 mod graduate;
 mod launch;
+mod sweep;
 mod trade;
 
 pub use claims::*;
 pub use config::*;
 pub use graduate::*;
 pub use launch::*;
+pub use sweep::*;
 pub use trade::*;
