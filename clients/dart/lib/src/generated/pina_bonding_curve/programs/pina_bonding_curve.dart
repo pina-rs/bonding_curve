@@ -30,6 +30,7 @@ enum PinaBondingCurveInstruction {
   claimCreatorFees,
   claimCreatorAllocation,
   setLaunchCreator,
+  sweepQuoteDust,
 }
 
 /// Identifies the type of a PinaBondingCurve instruction.
@@ -62,6 +63,9 @@ PinaBondingCurveInstruction identifyPinaBondingCurveInstruction(
   }
   if (containsBytes(data, getU8Encoder().encode(8), 0)) {
     return PinaBondingCurveInstruction.setLaunchCreator;
+  }
+  if (containsBytes(data, getU8Encoder().encode(9), 0)) {
+    return PinaBondingCurveInstruction.sweepQuoteDust;
   }
 
   throw SolanaError(SolanaErrorCode.programClientsFailedToIdentifyInstruction, {
@@ -150,6 +154,14 @@ final class ParsedSetLaunchCreator extends ParsedPinaBondingCurveInstruction {
   final SetLaunchCreatorInstructionData data;
 }
 
+/// A parsed SweepQuoteDust instruction.
+final class ParsedSweepQuoteDust extends ParsedPinaBondingCurveInstruction {
+  const ParsedSweepQuoteDust({required this.data})
+    : super(PinaBondingCurveInstruction.sweepQuoteDust);
+
+  final SweepQuoteDustInstructionData data;
+}
+
 /// Parses a PinaBondingCurve instruction.
 ParsedPinaBondingCurveInstruction parsePinaBondingCurveInstruction(
   Instruction instruction,
@@ -184,6 +196,9 @@ ParsedPinaBondingCurveInstruction parsePinaBondingCurveInstruction(
       ),
     PinaBondingCurveInstruction.setLaunchCreator => ParsedSetLaunchCreator(
       data: parseSetLaunchCreatorInstruction(instruction),
+    ),
+    PinaBondingCurveInstruction.sweepQuoteDust => ParsedSweepQuoteDust(
+      data: parseSweepQuoteDustInstruction(instruction),
     ),
   };
 }

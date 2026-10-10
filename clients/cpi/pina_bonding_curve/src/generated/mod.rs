@@ -17,4 +17,4 @@ pub use instructions::*;
 pub use programs::*;
 
 /// Number of instructions rendered for the `pinaBondingCurve` program.
-pub const INSTRUCTION_COUNT: usize = 9;
+pub const INSTRUCTION_COUNT: usize = 10;
