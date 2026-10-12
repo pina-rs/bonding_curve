@@ -8,8 +8,8 @@ Measured on the real SBF artifacts by the end-to-end suite (`compute_units_stay_
 
 | Instruction    | Compute units | CPIs                                                                        | CI ceiling |
 | -------------- | ------------- | --------------------------------------------------------------------------- | ---------- |
-| `Buy`          | ~7,900        | 2 transfers                                                                 | 10,000     |
-| `Sell`         | ~8,600        | 2 transfers                                                                 | 11,000     |
+| `Buy`          | ~7,800        | 2 transfers                                                                 | 10,000     |
+| `Sell`         | ~8,400        | 2 transfers                                                                 | 11,000     |
 | `CreateLaunch` | 19,800–21,300 | creates 3 accounts, mints, revokes the mint authority                       | 32,000     |
 | `Graduate`     | 65,000–90,000 | the AMM's `CreatePool` (5 accounts, 2 transfers, 1 mint), LP and base burns | 130,000    |
 
@@ -46,13 +46,13 @@ The per-instruction ceilings in the end-to-end suite stay as they are: they catc
 
 ## Program size
 
-About **112 KB** for the deployed `pina_bonding_curve.so`, built with fat LTO, one codegen unit, and `opt-level = 3`. Rent for the program-data account scales with this size. The largest contributors are the 256-bit arithmetic that keeps every curve calculation exact and the graduation path's AMM integration.
+About **117 KB** for the deployed `pina_bonding_curve.so`, built with fat LTO, one codegen unit, and `opt-level = 3`. Rent for the program-data account scales with this size. The largest contributors are the 256-bit arithmetic that keeps every curve calculation exact and the graduation path's AMM integration.
 
 The size-optimised profiles were measured and rejected:
 
 | Profile           | Size   | `Buy`            | Result                                                      |
 | ----------------- | ------ | ---------------- | ----------------------------------------------------------- |
-| `opt-level = 3`   | 112 KB | ~7,900 CU        | Used                                                        |
+| `opt-level = 3`   | 117 KB | ~7,800 CU        | Used                                                        |
 | `opt-level = "s"` | 105 KB | ~9,800 CU (+17%) | Every trade pays for a one-time rent saving                 |
 | `opt-level = "z"` | 94 KB  | —                | The entrypoint overflows the 4 KB SBF stack frame and fails |
 

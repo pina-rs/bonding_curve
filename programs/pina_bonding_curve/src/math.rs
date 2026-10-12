@@ -48,36 +48,51 @@ pub const fn full_mul(a: u128, b: u128) -> (u128, u128) {
 /// Returns `None` when the divisor is zero or the quotient does not fit in
 /// `u128`.
 ///
-/// Never inlined: the restoring-division loop is large enough that a copy per
-/// caller costs more program size than the call costs compute, and every trade
-/// pays for program rent only once.
+/// The common case — the product fits 128 bits, so `high` is zero — is small
+/// and inlines at every caller, so the division-dense configuration walk does
+/// not pay a call per segment. The 256-bit restoring-division loop that the
+/// overflow case needs is large, so it lives once in the outlined private
+/// `div_wide_slow` instead of being copied into every caller.
 #[must_use]
-#[inline(never)]
+#[inline]
 pub fn div_wide(high: u128, low: u128, divisor: u128, rounding: Rounding) -> Option<u128> {
 	if divisor == 0 || high >= divisor {
 		return None;
 	}
-	let (quotient, remainder) = if high == 0 {
-		(low / divisor, low % divisor)
-	} else {
-		// Restoring long division over the low 128 bits. The running
-		// remainder stays below the divisor; `carry` records the bit shifted
-		// out of it, in which case the true value already exceeds the divisor.
-		let mut remainder = high;
-		let mut quotient = 0u128;
-		let mut bit = 128;
-		while bit > 0 {
-			bit -= 1;
-			let carry = remainder >> 127;
-			remainder = (remainder << 1) | ((low >> bit) & 1);
-			quotient <<= 1;
-			if carry == 1 || remainder >= divisor {
-				remainder = remainder.wrapping_sub(divisor);
-				quotient |= 1;
-			}
+	if high != 0 {
+		return div_wide_slow(high, low, divisor, rounding);
+	}
+	let (quotient, remainder) = (low / divisor, low % divisor);
+	match rounding {
+		Rounding::Up if remainder != 0 => quotient.checked_add(1),
+		_ => Some(quotient),
+	}
+}
+
+/// `(high * 2^128 + low) / divisor` for products that exceed 128 bits.
+///
+/// Never inlined: this loop is large enough that a copy per caller costs more
+/// program size than the call costs compute, and a program pays for its size
+/// in rent once while it pays for compute on every trade.
+#[must_use]
+#[inline(never)]
+fn div_wide_slow(high: u128, low: u128, divisor: u128, rounding: Rounding) -> Option<u128> {
+	// Restoring long division over the low 128 bits. The running
+	// remainder stays below the divisor; `carry` records the bit shifted
+	// out of it, in which case the true value already exceeds the divisor.
+	let mut remainder = high;
+	let mut quotient = 0u128;
+	let mut bit = 128;
+	while bit > 0 {
+		bit -= 1;
+		let carry = remainder >> 127;
+		remainder = (remainder << 1) | ((low >> bit) & 1);
+		quotient <<= 1;
+		if carry == 1 || remainder >= divisor {
+			remainder = remainder.wrapping_sub(divisor);
+			quotient |= 1;
 		}
-		(quotient, remainder)
-	};
+	}
 	match rounding {
 		Rounding::Up if remainder != 0 => quotient.checked_add(1),
 		_ => Some(quotient),
