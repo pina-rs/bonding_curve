@@ -99,6 +99,10 @@ const int pinaBondingCurveErrorDefaultCreator = 0x16; // 22
 /// Message: "The launch price no longer matches the migration price derived from its configuration."
 const int pinaBondingCurveErrorMigrationPriceMismatch = 0x17; // 23
 
+/// The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.
+/// Message: "The new creator may not be the launch itself, which can never sign, claim, or receive its LP share."
+const int pinaBondingCurveErrorLaunchAsCreator = 0x18; // 24
+
 /// Map of error codes to human-readable messages.
 const Map<int, String> _pinaBondingCurveErrorMessages = {
   pinaBondingCurveErrorInvalidCurve: 'Curve segments must be non-empty, strictly increasing, in range, and have positive liquidity.',
@@ -137,6 +141,7 @@ const Map<int, String> _pinaBondingCurveErrorMessages = {
   pinaBondingCurveErrorMissingLpAccount: 'A creator or partner LP account is required because its LP share is not zero.',
   pinaBondingCurveErrorDefaultCreator: 'The new creator may not be the default address, which can never sign or claim.',
   pinaBondingCurveErrorMigrationPriceMismatch: 'The launch price no longer matches the migration price derived from its configuration.',
+  pinaBondingCurveErrorLaunchAsCreator: 'The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.',
 };
 
 /// Get the error message for a PinaBondingCurve program error code.

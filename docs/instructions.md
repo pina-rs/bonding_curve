@@ -173,7 +173,7 @@ Pays the allocation vested so far minus what was already claimed. Errors: `Unaut
 | 0 | `creator` | s | The current creator |
 | 1 | `launch`  | w |                     |
 
-Moves future creator fees and the unclaimed allocation to `new_creator`. Errors: `Unauthorized`.
+Moves future creator fees and the unclaimed allocation to `new_creator`. Errors: `Unauthorized`, `DefaultCreator` (the default address), `LaunchAsCreator` (the launch's own address).
 
 ## `SweepQuoteDust`
 
@@ -229,5 +229,8 @@ In `Traded`, `quote_amount` is what the buyer paid (fee included) or what the se
 | 19   | `InvalidPoolCreatorMode`         | The mode is not 0 or 1                                                      |
 | 20   | `NothingToClaim`                 | Nothing has accrued or vested                                               |
 | 21   | `MissingLpAccount`               | An LP recipient is required because its share is above zero                 |
+| 22   | `DefaultCreator`                 | The new creator is the default address, which can never sign                |
+| 23   | `MigrationPriceMismatch`         | The launch price no longer matches the configuration's migration price      |
+| 24   | `LaunchAsCreator`                | The new creator is the launch itself, which can never sign or receive LP    |
 
 Pina's own framework errors use codes `0xFFFF0000` and above, for example `DuplicateMutableAccount` when the same writable account appears twice.

@@ -109,6 +109,10 @@ pub enum PinaBondingCurveError {
 	/// 23 - The launch price no longer matches the migration price derived from its configuration.
 	#[error("The launch price no longer matches the migration price derived from its configuration.")]
 	MigrationPriceMismatch = 0x17,
+	/// The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.
+	/// 24 - The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.
+	#[error("The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.")]
+	LaunchAsCreator = 0x18,
 }
 
 impl From<PinaBondingCurveError> for solana_program_error::ProgramError {
