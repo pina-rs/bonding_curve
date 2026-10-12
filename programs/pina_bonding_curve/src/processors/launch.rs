@@ -7,6 +7,7 @@ use super::common::now;
 use crate::ID;
 use crate::errors::CurveError;
 use crate::events::LaunchCreated;
+use crate::events::LaunchCreatorChanged;
 use crate::instructions::CreateLaunchInstruction;
 use crate::instructions::SetLaunchCreatorInstruction;
 use crate::state::Launch;
@@ -164,11 +165,27 @@ impl<'a> ProcessAccountInfos<'a> for CreateLaunchAccounts<'a> {
 impl<'a> ProcessAccountInfos<'a> for SetLaunchCreatorAccounts<'a> {
 	fn process(self, data: &[u8]) -> ProgramResult {
 		let args = SetLaunchCreatorInstruction::try_from_bytes(data)?;
-		let mut launch = self.launch.as_account_mut::<Launch>(&ID)?;
-		if &launch.creator != self.creator.address() {
-			return Err(CurveError::Unauthorized.into());
+		// The default address can never sign, so creator fees and the vested
+		// allocation would become unclaimable, and a launch whose LP share is
+		// not zero could never graduate.
+		if args.new_creator == Address::default() {
+			return Err(CurveError::DefaultCreator.into());
 		}
-		launch.creator = args.new_creator;
-		Ok(())
+		let launch_address = *self.launch.address();
+		let previous_creator;
+		{
+			let mut launch = self.launch.as_account_mut::<Launch>(&ID)?;
+			if &launch.creator != self.creator.address() {
+				return Err(CurveError::Unauthorized.into());
+			}
+			previous_creator = launch.creator;
+			launch.creator = args.new_creator;
+		}
+		LaunchCreatorChanged::emit(|event| {
+			event.launch = launch_address;
+			event.previous_creator = previous_creator;
+			event.new_creator = args.new_creator;
+			Ok(())
+		})
 	}
 }

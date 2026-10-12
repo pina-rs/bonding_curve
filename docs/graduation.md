@@ -26,7 +26,7 @@ Completion therefore happens exactly at the migration price, never past it, and 
 2. **Seed at the curve price.** Pair the remaining quote with exactly the base it is worth at the final curve price. Whichever side is in excess is the surplus.
 3. **Commit.** Mark the launch `Graduated`, record the pool, zero `quote_reserve`, and add the migration fee (plus any quote surplus) to the creator and partner fee balances. This happens before any cross-program call.
 4. **Create the pool.** Call the Pina AMM's `CreatePool`, signed by the launch (the depositor and LP owner) and by the program's AMM authority PDA (the tier's pool creator). The pool's creator is the launch creator or the partner, per `pool_creator_mode`, and its creator fee is paid in the quote token.
-5. **Distribute LP.** Send `creator_lp_share` of the minted LP to the creator and `partner_lp_share` to the partner, creating their associated LP token accounts when needed. Burn the rest.
+5. **Distribute LP.** Send `creator_lp_share` of the minted LP to the creator and `partner_lp_share` to the partner, creating their associated LP token accounts when needed. When the creator and the partner are the same address, the two shares are paid as one transfer to that address's LP token account. Burn the rest.
 6. **Burn surplus base.** Burn the base the pool did not need, shrinking the token's supply.
 7. Emit `Graduated` with the amounts.
 
@@ -90,8 +90,8 @@ Clients that build the instruction themselves need the AMM accounts. With `mint_
 | `pool_vault0`/`1` | `[b"pool_vault", pool, mint_0]` and `[..., mint_1]` under the AMM |
 | `launch_lp_token` | The launch's associated token account for `lp_mint` (SPL Token)   |
 
-Append `creator` and `creator_lp_token` when `creator_lp_share` is above zero, and `partner` and `partner_lp_token` when `partner_lp_share` is above zero; otherwise leave them out (the generated clients fill their slots with the program id). A missing required pair fails with `MissingLpAccount`. The full account list is in [instructions.md](instructions.md#graduate).
+Append `creator` and `creator_lp_token` when `creator_lp_share` is above zero, and `partner` and `partner_lp_token` when `partner_lp_share` is above zero; otherwise leave them out (the generated clients fill their slots with the program id). A missing required pair fails with `MissingLpAccount`. When the launch creator and the configuration's partner are the same address, pass only the creator pair: the two payouts target one token account, which cannot appear twice as writable, so their shares are merged into the single payment. The full account list is in [instructions.md](instructions.md#graduate).
 
 ## After graduation
 
-Trade the token through the Pina AMM: [`pina-amm`](https://github.com/pina-rs/amm/blob/main/docs/cli.md), [`@pina-rs/amm`](https://github.com/pina-rs/amm/blob/main/docs/typescript.md), [`pina_amm`](https://github.com/pina-rs/amm/blob/main/docs/dart.md), or [`pina_amm_client`](https://github.com/pina-rs/amm/blob/main/docs/rust-client.md). The launch account keeps the pool's address in `pool`.
+Trade the token through the Pina AMM: [`pina-amm`](https://github.com/pina-rs/amm/blob/main/docs/cli.md), [`@pina-rs/amm`](https://github.com/pina-rs/amm/blob/main/docs/typescript.md), [`pina_amm`](https://github.com/pina-rs/amm/blob/main/docs/dart.md), or [`pina_amm_client`](https://github.com/pina-rs/amm/blob/main/docs/rust-client.md). The launch account keeps the pool's address in `pool`. Quote that arrived in the vault above the launch's accounting — a donation or a mis-sent transfer — can be split into the creator's and partner's fees at any time with `SweepQuoteDust` (see [instructions.md](instructions.md#sweepquotedust)).
