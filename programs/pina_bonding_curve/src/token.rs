@@ -91,6 +91,19 @@ pub fn transfer_signed(
 		.invoke_signed_with_program(core::slice::from_ref(signer), token_program.address())
 }
 
+/// Burn `amount` tokens held by a launch vault, signed by the launch PDA.
+pub(crate) fn burn_signed(
+	account: &AccountView,
+	mint: &AccountView,
+	authority: &AccountView,
+	token_program: &AccountView,
+	amount: u64,
+	signer: &Signer<'_, '_>,
+) -> ProgramResult {
+	token::instructions::Burn::new(account, mint, authority, amount)
+		.invoke_signed_with_program(core::slice::from_ref(signer), token_program.address())
+}
+
 /// Allocate `space` bytes at a PDA and assign it to `owner`.
 ///
 /// Anyone can send lamports to an address before it is created, and the

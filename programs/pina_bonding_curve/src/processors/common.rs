@@ -10,6 +10,8 @@ use crate::curve::MAX_SEGMENTS;
 use crate::errors::CurveError;
 use crate::state::Launch;
 use crate::state::LaunchConfig;
+use crate::state::LaunchConfigZc;
+use crate::state::LaunchSeedsWithBump;
 use crate::state::LaunchStatus;
 
 /// The current Unix timestamp.
@@ -29,9 +31,6 @@ pub(crate) struct ConfigSnapshot {
 	pub creator_allocation: u64,
 	pub creator_vesting_cliff: u64,
 	pub creator_vesting_duration: u64,
-	pub fee_decay_duration: u64,
-	pub start_fee_rate: u32,
-	pub end_fee_rate: u32,
 	pub creator_fee_share: u32,
 	pub migration_fee_rate: u32,
 	pub creator_lp_share: u32,
@@ -40,36 +39,42 @@ pub(crate) struct ConfigSnapshot {
 	pub pool_creator_mode: u8,
 }
 
+/// Read the curve out of a configuration the program created.
+///
+/// Shared by the full and trade loaders so the segment copies exist once;
+/// the stored curve was validated by `CreateConfig` before it was written.
+#[inline(never)]
+pub(crate) fn stored_curve(state: &LaunchConfigZc) -> Curve {
+	let mut uppers = [0u128; MAX_SEGMENTS];
+	let mut liquidities = [0u128; MAX_SEGMENTS];
+	for index in 0..MAX_SEGMENTS {
+		uppers[index] = state.curve_sqrt_prices[index].get();
+		liquidities[index] = state.curve_liquidities[index].get();
+	}
+	Curve::from_stored(
+		state.sqrt_start_price.get(),
+		uppers,
+		liquidities,
+		state.segment_count,
+	)
+}
+
 impl ConfigSnapshot {
 	/// Load a configuration. The typed load checks ownership, discriminator,
 	/// schema version, and size; only this program creates accounts that
 	/// pass it, and every one was validated when it was created.
 	pub fn load(config: &AccountView) -> Result<Self, ProgramError> {
 		let state = config.as_account::<LaunchConfig>(&ID)?;
-		let mut uppers = [0u128; MAX_SEGMENTS];
-		let mut liquidities = [0u128; MAX_SEGMENTS];
-		for index in 0..MAX_SEGMENTS {
-			uppers[index] = state.curve_sqrt_prices[index].get();
-			liquidities[index] = state.curve_liquidities[index].get();
-		}
 		Ok(Self {
 			authority: state.authority,
 			quote_mint: state.quote_mint,
 			amm_config: state.amm_config,
-			curve: Curve::new(
-				state.sqrt_start_price.get(),
-				uppers,
-				liquidities,
-				state.segment_count,
-			)?,
+			curve: stored_curve(&state),
 			migration_sqrt_price: state.migration_sqrt_price.get(),
 			total_supply: state.total_supply.get(),
 			creator_allocation: state.creator_allocation.get(),
 			creator_vesting_cliff: state.creator_vesting_cliff.get(),
 			creator_vesting_duration: state.creator_vesting_duration.get(),
-			fee_decay_duration: state.fee_decay_duration.get(),
-			start_fee_rate: state.start_fee_rate.get(),
-			end_fee_rate: state.end_fee_rate.get(),
 			creator_fee_share: state.creator_fee_share.get(),
 			migration_fee_rate: state.migration_fee_rate.get(),
 			creator_lp_share: state.creator_lp_share.get(),
@@ -139,12 +144,10 @@ impl LaunchSnapshot {
 	}
 }
 
-/// Run `body` with the launch's PDA signer.
-pub(crate) fn with_launch_signer<R>(
-	snapshot: &LaunchSnapshot,
-	body: impl FnOnce(&Signer<'_, '_>) -> Result<R, ProgramError>,
-) -> Result<R, ProgramError> {
-	let seeds = Launch::seeds(&snapshot.base_mint).with_bump(snapshot.bump);
-	let signer = seeds.to_signer();
-	body(&signer.as_signer())
+/// The launch PDA's canonical signer seeds.
+///
+/// A helper rather than a closure wrapper so every processor shares one copy
+/// of the seed-building code instead of a monomorphized copy per call site.
+pub(crate) fn launch_signer_seeds(snapshot: &LaunchSnapshot) -> LaunchSeedsWithBump<'_> {
+	Launch::seeds(&snapshot.base_mint).with_bump(snapshot.bump)
 }

@@ -4,8 +4,8 @@ use pina::*;
 
 use super::common::ConfigSnapshot;
 use super::common::LaunchSnapshot;
+use super::common::launch_signer_seeds;
 use super::common::now;
-use super::common::with_launch_signer;
 use crate::ID;
 use crate::errors::CurveError;
 use crate::events::Claimed;
@@ -105,16 +105,16 @@ impl<'a> ProcessAccountInfos<'a> for ClaimFeesAccounts<'a> {
 				state.creator_fees.set(0);
 			}
 		}
-		with_launch_signer(&launch, |signer| {
-			transfer_signed(
-				self.quote_vault,
-				self.destination,
-				self.launch,
-				self.quote_token_program,
-				amount,
-				signer,
-			)
-		})?;
+		let seeds = launch_signer_seeds(&launch);
+		let signer = seeds.to_signer();
+		transfer_signed(
+			self.quote_vault,
+			self.destination,
+			self.launch,
+			self.quote_token_program,
+			amount,
+			&signer.as_signer(),
+		)?;
 		emit_claim(
 			self.launch.address(),
 			&owner,
@@ -152,16 +152,16 @@ impl<'a> ProcessAccountInfos<'a> for ClaimCreatorAllocationAccounts<'a> {
 			.as_account_mut::<Launch>(&ID)?
 			.creator_claimed
 			.set(vested);
-		with_launch_signer(&launch, |signer| {
-			transfer_signed(
-				self.base_vault,
-				self.destination,
-				self.launch,
-				self.base_token_program,
-				amount,
-				signer,
-			)
-		})?;
+		let seeds = launch_signer_seeds(&launch);
+		let signer = seeds.to_signer();
+		transfer_signed(
+			self.base_vault,
+			self.destination,
+			self.launch,
+			self.base_token_program,
+			amount,
+			&signer.as_signer(),
+		)?;
 		emit_claim(
 			self.launch.address(),
 			&launch.creator,

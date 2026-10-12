@@ -2,12 +2,13 @@
 
 use pina::*;
 
-use super::common::ConfigSnapshot;
 use super::common::LaunchSnapshot;
+use super::common::launch_signer_seeds;
 use super::common::now;
-use super::common::with_launch_signer;
+use super::common::stored_curve;
 use crate::ID;
 use crate::curve;
+use crate::curve::Curve;
 use crate::errors::CurveError;
 use crate::events::Completed;
 use crate::events::Traded;
@@ -19,6 +20,7 @@ use crate::math::fee_rate_at;
 use crate::math::gross_up;
 use crate::math::share_floor;
 use crate::state::Launch;
+use crate::state::LaunchConfig;
 use crate::state::LaunchStatus;
 use crate::token::transfer;
 use crate::token::transfer_signed;
@@ -56,10 +58,33 @@ struct Settlement {
 	completed: bool,
 }
 
+/// The configuration fields a trade prices with.
+///
+/// A trade touches none of the graduation, vesting, or supply terms, so
+/// loading only what the pricing needs keeps per-trade copies small; every
+/// field comes from the same validated, immutable `LaunchConfig`.
+struct TradeConfig {
+	curve: Curve,
+	migration_sqrt_price: u128,
+	fee_decay_duration: u64,
+	start_fee_rate: u32,
+	end_fee_rate: u32,
+	creator_fee_share: u32,
+}
+
 impl TradeAccounts<'_> {
 	/// Load and check everything both directions need.
-	fn prepare(&self) -> Result<(ConfigSnapshot, LaunchSnapshot, u32), ProgramError> {
-		let config = ConfigSnapshot::load(self.config)?;
+	fn prepare(&self) -> Result<(TradeConfig, LaunchSnapshot, u32), ProgramError> {
+		let state = self.config.as_account::<LaunchConfig>(&ID)?;
+		let config = TradeConfig {
+			curve: stored_curve(&state),
+			migration_sqrt_price: state.migration_sqrt_price.get(),
+			fee_decay_duration: state.fee_decay_duration.get(),
+			start_fee_rate: state.start_fee_rate.get(),
+			end_fee_rate: state.end_fee_rate.get(),
+			creator_fee_share: state.creator_fee_share.get(),
+		};
+		drop(state);
 		let launch = LaunchSnapshot::load(self.launch, self.config)?;
 		launch.assert_base_vault(self.base_vault)?;
 		launch.assert_quote_vault(self.quote_vault)?;
@@ -153,16 +178,16 @@ impl TradeAccounts<'_> {
 			self.quote_token_program,
 			paid,
 		)?;
-		with_launch_signer(&launch, |signer| {
-			transfer_signed(
-				self.base_vault,
-				self.trader_base,
-				self.launch,
-				self.base_token_program,
-				result.base_out,
-				signer,
-			)
-		})?;
+		let seeds = launch_signer_seeds(&launch);
+		let signer = seeds.to_signer();
+		transfer_signed(
+			self.base_vault,
+			self.trader_base,
+			self.launch,
+			self.base_token_program,
+			result.base_out,
+			&signer.as_signer(),
+		)?;
 
 		self.emit(true, result.base_out, paid, fee, &settlement)?;
 		if settlement.completed {
@@ -209,16 +234,16 @@ impl TradeAccounts<'_> {
 			self.base_token_program,
 			base_amount_in,
 		)?;
-		with_launch_signer(&launch, |signer| {
-			transfer_signed(
-				self.quote_vault,
-				self.trader_quote,
-				self.launch,
-				self.quote_token_program,
-				received,
-				signer,
-			)
-		})?;
+		let seeds = launch_signer_seeds(&launch);
+		let signer = seeds.to_signer();
+		transfer_signed(
+			self.quote_vault,
+			self.trader_quote,
+			self.launch,
+			self.quote_token_program,
+			received,
+			&signer.as_signer(),
+		)?;
 
 		self.emit(false, base_amount_in, received, fee, &settlement)
 	}
