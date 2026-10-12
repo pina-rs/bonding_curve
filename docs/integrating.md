@@ -16,7 +16,7 @@ All clients are generated from the same IDL, so names match across languages (`g
 
 | Address        | How to get it                                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Program        | `CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9`, exported by every client                                                 |
+| Program        | `Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP`, exported by every client                                                 |
 | Configuration  | `findLaunchConfigPda({ authority, index })`                                                                              |
 | Launch         | `findLaunchPda({ baseMint })`                                                                                            |
 | Vaults         | stored on the launch as `baseVault` and `quoteVault`, or `findLaunchVaultPda({ launch, mint })`                          |

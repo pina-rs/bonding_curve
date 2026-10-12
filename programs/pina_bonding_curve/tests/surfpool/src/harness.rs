@@ -44,7 +44,7 @@ pub const NATIVE_MINT: Pubkey =
 pub const SYSTEM_PROGRAM: Pubkey = Pubkey::from_str_const("11111111111111111111111111111111");
 /// The Pina AMM.
 pub const AMM_PROGRAM: Pubkey =
-	Pubkey::from_str_const("pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV");
+	Pubkey::from_str_const("pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi");
 /// The clock sysvar.
 pub const CLOCK_SYSVAR: Pubkey =
 	Pubkey::from_str_const("SysvarC1ock11111111111111111111111111111111");

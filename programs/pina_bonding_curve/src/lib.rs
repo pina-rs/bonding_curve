@@ -66,4 +66,4 @@ use pina::*;
 pub use processors::*;
 pub use state::*;
 
-declare_id!("CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9");
+declare_id!("Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP");

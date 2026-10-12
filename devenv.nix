@@ -78,7 +78,7 @@ in
       pina generate --project programs/pina_bonding_curve --output clients --npx node
       if [ -f target/idl/pina_amm.json ]; then
         pina import pina_amm \
-          --program-id pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV \
+          --program-id pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi \
           --idl target/idl/pina_amm.json \
           --output vendor >/dev/null
       fi

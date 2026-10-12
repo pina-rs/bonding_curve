@@ -1,6 +1,6 @@
 # pina_amm_cpi
 
-Generated CPI client for `pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV`.
+Generated CPI client for `pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi`.
 
 This crate was produced by `pina import`. Do not edit it by hand: re-run the
 import instead so the provenance below stays accurate.
@@ -10,9 +10,9 @@ import instead so the provenance below stays accurate.
 
 | Field | Value |
 | --- | --- |
-| Program ID | `pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV` |
+| Program ID | `pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi` |
 | IDL source | file `target/idl/pina_amm.json` |
-| IDL SHA-256 | `4edac3eb3d3bf52637df6a72f18529903a03034a3f289cd1ee5c288d14bcd7e3` |
+| IDL SHA-256 | `67119b77c0fa858f5f289e7a8069f67ca49e2fbb5359627db0aef33fb329b2f8` |
 | Generator | `pina_cpi_renderer` 0.23.0 |
 
 A CPI crate is a copy of another program's interface, so this digest is the

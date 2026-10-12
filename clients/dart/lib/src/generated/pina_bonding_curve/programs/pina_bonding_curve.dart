@@ -13,7 +13,7 @@ import '../instructions/instructions.dart';
 
 /// The address of the PinaBondingCurve program.
 const pinaBondingCurveProgramAddress = Address(
-  'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9',
+  'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP',
 );
 
 /// Known accounts for the PinaBondingCurve program.

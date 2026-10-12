@@ -5,7 +5,7 @@
 Self-serve token launchpads for Solana, built with [Pina](https://github.com/pina-rs/pina). Anyone can run a launchpad by writing one configuration: the price curve, the supply, the fees, the creator's terms, and how launches graduate. Every token launched under it sells along that curve and, once it raises its target, graduates into a [Pina AMM](https://github.com/pina-rs/amm) pool at exactly the price the curve reached.
 
 ```text
-Program ID  CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9
+Program ID  Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP
 ```
 
 > **Status:** pre-release. The program has not been deployed or audited, and the interface may still change before the first `v*` tag. See [SECURITY.md](SECURITY.md).

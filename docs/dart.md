@@ -353,7 +353,7 @@ A buy that reaches the migration price completes the launch (`status == 1`). Any
 
 ```dart
 const pinaAmmProgramAddress = Address(
-  'pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV',
+  'pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi',
 );
 
 /// A Pina AMM PDA from a string seed and address seeds.

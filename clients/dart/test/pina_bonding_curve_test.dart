@@ -9,7 +9,7 @@ void main() {
   test('exports the deployed program address', () {
     expect(
       pinaBondingCurveProgramAddress,
-      const Address('CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9'),
+      const Address('Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP'),
     );
   });
 

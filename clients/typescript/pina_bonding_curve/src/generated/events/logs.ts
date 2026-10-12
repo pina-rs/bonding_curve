@@ -572,7 +572,7 @@ export type DecodedPinaBondingCurveEvent =
 	| DecodedDustSweptEvent;
 
 /** The program whose invocation frames emit the events decoded here. */
-export const PINA_BONDING_CURVE_EVENT_SOURCE_ADDRESS = "CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9";
+export const PINA_BONDING_CURVE_EVENT_SOURCE_ADDRESS = "Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP";
 
 const PROGRAM_INVOKE_LOG = /^Program (\S+) invoke \[\d+\]$/;
 const PROGRAM_EXIT_LOG = /^Program (\S+) (?:success|failed: .*)$/;

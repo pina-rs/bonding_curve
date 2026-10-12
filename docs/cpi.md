@@ -30,7 +30,7 @@ use pina::address;
 
 /// The Pina Bonding Curve deployment this program trusts: a compile-time
 /// trust boundary.
-const TRUSTED_CURVE_PROGRAM_ID: Address = address!("CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9");
+const TRUSTED_CURVE_PROGRAM_ID: Address = address!("Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP");
 
 const fn same_address(left: &Address, right: &Address) -> bool {
 	let (left, right) = (left.as_array(), right.as_array());
@@ -266,6 +266,6 @@ if launch.status != 0 {
 
 ## Keeping the client in sync
 
-The CPI crate is generated from the curve's IDL. If you vendor it instead of depending on the published crate, regenerate it from the IDL of the curve version you target with `pina import pina_bonding_curve --program-id CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9 --idl <idl.json>`, which records the IDL hash it was built from. The compile-time assertion above then catches a regenerated crate that targets a different deployment.
+The CPI crate is generated from the curve's IDL. If you vendor it instead of depending on the published crate, regenerate it from the IDL of the curve version you target with `pina import pina_bonding_curve --program-id Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP --idl <idl.json>`, which records the IDL hash it was built from. The compile-time assertion above then catches a regenerated crate that targets a different deployment.
 
 This repository calls the Pina AMM the same way when a launch graduates. `programs/pina_bonding_curve/src/processors/graduate.rs` validates the AMM with `ProgramAccount::try_new` and signs `CreatePool` with two PDAs; it is a complete, tested example.

@@ -10,7 +10,7 @@ use crate::PINA_BONDING_CURVE_ID;
 /// The Pina AMM program every launch graduates into. The curve rejects any
 /// other AMM program at graduation.
 pub const PINA_AMM_ID: Pubkey =
-	Pubkey::from_str_const("pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV");
+	Pubkey::from_str_const("pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi");
 
 /// A launch's token account for `mint`: `[b"launch_vault", launch, mint]`.
 #[must_use]
@@ -91,7 +91,7 @@ mod tests {
 	fn the_amm_authority_matches_the_documented_address() {
 		assert_eq!(
 			amm_authority(),
-			Pubkey::from_str_const("ALk5JUXnbaYwVeHG4ymAVVfPKW1xaUTCrSyrvKiq7CGZ")
+			Pubkey::from_str_const("HUjATWLMQR85P71zHVoHgbRPTY7xx4gEdyDg7EMin7XX")
 		);
 	}
 

@@ -9,6 +9,6 @@
 import { getProgramDerivedAddress, getUtf8Encoder, type Address, type ProgramDerivedAddress } from '@solana/kit';
 
 export async function findAmmAuthorityPda(config: { programAddress?: Address | undefined } = {}): Promise<ProgramDerivedAddress> {
-  const { programAddress = 'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9' as Address<'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9'> } = config;
+  const { programAddress = 'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP' as Address<'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP'> } = config;
   return await getProgramDerivedAddress({ programAddress, seeds: [getUtf8Encoder().encode("amm_authority")]});
 }

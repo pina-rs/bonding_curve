@@ -12,7 +12,7 @@ export const site = {
 		"Self-serve token launchpads for Solana, built with Pina. Launches sell along a curve you design and graduate into a Pina AMM pool at exactly the price they reached.",
 	repository: "https://github.com/pina-rs/bonding_curve",
 	branch: "main",
-	programId: "CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9",
+	programId: "Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP",
 	pina: "https://github.com/pina-rs/pina",
 	/** The other Pina product, linked from the footer. */
 	sibling: { name: "Pina AMM", href: "https://amm.pina.rs" },

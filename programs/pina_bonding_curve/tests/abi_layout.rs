@@ -6,15 +6,15 @@
 //! check` fails when this file no longer matches the manifest. A layout
 //! change that forgets an offset fails `cargo test` in the same change.
 
-// manifest-sha256: 30a269999e9afd824ed5a155102ce0edcb7c4c1ca50076367e6432232db23476
-// program-id: CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9
+// manifest-sha256: 0e563aabbc4f971f43a028fc20fe96270c154bbd1ad87a6b3f768730d6005300
+// program-id: Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP
 // version_type: u8
 
 #![allow(clippy::identity_op, clippy::eq_op)]
 #![allow(clippy::unreadable_literal)]
 
 /// Program id recorded in the manifest.
-pub const PROGRAM_ID: &str = "CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9";
+pub const PROGRAM_ID: &str = "Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP";
 
 /// ABI layout for the `LaunchConfig` account.
 pub mod account_1_01 {

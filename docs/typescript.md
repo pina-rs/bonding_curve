@@ -494,7 +494,7 @@ import {
 } from "@solana/kit";
 
 const PINA_AMM_PROGRAM_ADDRESS = address(
-	"pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV",
+	"pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi",
 );
 const addressEncoder = getAddressEncoder();
 

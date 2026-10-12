@@ -11,7 +11,7 @@ use pina::Address;
 use pina::CpiProgramId;
 use pina::Program;
 
-pub const PINA_BONDING_CURVE_ID: Address = pina::address!("CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9");
+pub const PINA_BONDING_CURVE_ID: Address = pina::address!("Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP");
 
 /// Marker for the `pinaBondingCurve` program used by generated CPI builders.
 #[derive(Clone, Copy, Debug)]
@@ -45,7 +45,7 @@ mod tests {
 	/// full rather than only through the constant.
 	#[test]
 	fn binds_the_expected_program_id() {
-		assert_eq!(PINA_BONDING_CURVE_ID, pina::address!("CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9"));
+		assert_eq!(PINA_BONDING_CURVE_ID, pina::address!("Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP"));
 		assert_eq!(PinaBondingCurve::ID, PINA_BONDING_CURVE_ID);
 		assert!(is_expected_program(&PINA_BONDING_CURVE_ID));
 	}
