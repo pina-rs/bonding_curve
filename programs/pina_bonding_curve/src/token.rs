@@ -92,7 +92,7 @@ pub fn transfer_signed(
 }
 
 /// Burn `amount` tokens held by a launch vault, signed by the launch PDA.
-pub fn burn_signed(
+pub(crate) fn burn_signed(
 	account: &AccountView,
 	mint: &AccountView,
 	authority: &AccountView,
