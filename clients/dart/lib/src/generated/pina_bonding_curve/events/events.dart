@@ -23,7 +23,7 @@ import 'dust_swept.dart';
 
 /// The program whose invocation frames emit the events decoded here.
 const pinaBondingCurveEventSourceAddress =
-    'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9';
+    'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP';
 
 final _programInvokeLog = RegExp(r'^Program (\S+) invoke \[\d+\]$');
 final _programExitLog = RegExp(r'^Program (\S+) (?:success|failed: .*)$');

@@ -1,6 +1,6 @@
 # `pina_bonding_curve`
 
-The on-chain Pina Bonding Curve program: self-serve launchpads whose tokens sell along piecewise concentrated-liquidity curves and graduate into the [Pina AMM](https://github.com/pina-rs/amm). Its program address is `CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9`; it ships through `pina deploy`, never through a package registry.
+The on-chain Pina Bonding Curve program: self-serve launchpads whose tokens sell along piecewise concentrated-liquidity curves and graduate into the [Pina AMM](https://github.com/pina-rs/amm). Its program address is `Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP`; it ships through `pina deploy`, never through a package registry.
 
 | Path                  | Contents                                                            |
 | --------------------- | ------------------------------------------------------------------- |

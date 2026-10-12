@@ -6,7 +6,7 @@ This is the runbook for deploying the program and preparing the Pina AMM tier it
 
 | Key               | Purpose                                                               | Where it lives                                                                           |
 | ----------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Program keypair   | The program's address, `CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9` | Offline backup; locally at `target/deploy/pina_bonding_curve-keypair.json` (git-ignored) |
+| Program keypair   | The program's address, `Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP` | Offline backup; locally at `target/deploy/pina_bonding_curve-keypair.json` (git-ignored) |
 | Upgrade authority | Upgrades the program                                                  | A hardware wallet or multisig                                                            |
 | Fee payer         | Pays deployment rent and fees                                         | Any funded wallet                                                                        |
 
@@ -14,7 +14,7 @@ Never commit a keypair. `pina keys show` compares the local keypair with `declar
 
 ## Deploy
 
-The curve calls the Pina AMM during graduation, so deploy against a cluster where the AMM at `pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV` is live.
+The curve calls the Pina AMM during graduation, so deploy against a cluster where the AMM at `pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi` is live.
 
 ```sh
 export PINA_CURVE_PROGRAM_KEYPAIR=~/secure/pina_bonding_curve-keypair.json
@@ -41,15 +41,15 @@ Every configuration names a Pina AMM fee tier restricted to the curve's AMM auth
 # The curve's AMM authority: PDA [b"amm_authority"] under the curve program.
 pina-amm -u mainnet -k ~/secure/amm-upgrade-authority.json \
   config create --index 100 --trade-fee-rate 2500 --protocol-fee-rate 160000 \
-  --creator-fee-rate 5000 --pool-creator-authority ALk5JUXnbaYwVeHG4ymAVVfPKW1xaUTCrSyrvKiq7CGZ \
+  --creator-fee-rate 5000 --pool-creator-authority HUjATWLMQR85P71zHVoHgbRPTY7xx4gEdyDg7EMin7XX \
   --authority <TIER_MULTISIG>
 ```
 
 The PDA is deterministic. Derive it with any client (`findAmmAuthorityPda()` in TypeScript) or with the Solana CLI:
 
 ```console
-$ solana find-program-derived-address CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9 string:amm_authority
-ALk5JUXnbaYwVeHG4ymAVVfPKW1xaUTCrSyrvKiq7CGZ
+$ solana find-program-derived-address Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP string:amm_authority
+HUjATWLMQR85P71zHVoHgbRPTY7xx4gEdyDg7EMin7XX
 ```
 
 A deployment with a different program id has a different PDA.

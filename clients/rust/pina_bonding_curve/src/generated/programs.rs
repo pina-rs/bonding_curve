@@ -10,4 +10,4 @@
 
 use solana_pubkey::{pubkey, Pubkey};
 
-pub const PINA_BONDING_CURVE_ID: Pubkey = pubkey!("CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9");
+pub const PINA_BONDING_CURVE_ID: Pubkey = pubkey!("Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP");

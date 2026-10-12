@@ -11,7 +11,7 @@ import {
 test("exports the deployed program address", () => {
 	assert.equal(
 		PINA_BONDING_CURVE_PROGRAM_ADDRESS,
-		"CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9",
+		"Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP",
 	);
 });
 

@@ -37,6 +37,10 @@ pub struct Pool {
 	pub creator_fee_rate: u32,
 	pub creator_fee_mode: u8,
 	pub bump: u8,
+	pub price0_cumulative_last: u128,
+	pub last_update_timestamp: u64,
+	pub reserve0_last: u64,
+	pub reserve1_last: u64,
 }
 
 /// Account discriminator declared by the program's IDL.
@@ -44,7 +48,7 @@ pub const POOL_DISCRIMINATOR: [u8; 2] = [2, 0];
 
 impl Pool {
 	/// Encoded size of this account's data.
-	pub const LEN: usize = 280;
+	pub const LEN: usize = 320;
 
 	/// Whether `data` carries this account's discriminator.
 	#[inline(always)]
@@ -115,6 +119,18 @@ impl Pool {
 		cursor += 1;
 		let bump: u8 = u8::from_le_bytes(data.get(cursor..cursor + 1)?
 		.try_into().ok()?);
+		cursor += 1;
+		let price0_cumulative_last: u128 = u128::from_le_bytes(data.get(cursor..cursor + 16)?
+		.try_into().ok()?);
+		cursor += 16;
+		let last_update_timestamp: u64 = u64::from_le_bytes(data.get(cursor..cursor + 8)?
+		.try_into().ok()?);
+		cursor += 8;
+		let reserve0_last: u64 = u64::from_le_bytes(data.get(cursor..cursor + 8)?
+		.try_into().ok()?);
+		cursor += 8;
+		let reserve1_last: u64 = u64::from_le_bytes(data.get(cursor..cursor + 8)?
+		.try_into().ok()?);
 
 		Some(Pool {
 			amm_config,
@@ -134,6 +150,10 @@ impl Pool {
 			creator_fee_rate,
 			creator_fee_mode,
 			bump,
+			price0_cumulative_last,
+			last_update_timestamp,
+			reserve0_last,
+			reserve1_last,
 		})
 	}
 }

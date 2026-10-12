@@ -83,7 +83,7 @@ Clients that build the instruction themselves need the AMM accounts. With `mint_
 | Account           | Address                                                           |
 | ----------------- | ----------------------------------------------------------------- |
 | `amm_authority`   | `[b"amm_authority"]` under the curve program                      |
-| `amm_program`     | The Pina AMM, `pAMMvXaqR2VVFqznf6dgvUFQjLXXAEeL9cb48cXsGeV`       |
+| `amm_program`     | The Pina AMM, `pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi`       |
 | `amm_config`      | The configuration's `amm_config`                                  |
 | `pool`            | `[b"pool", amm_config, mint_0, mint_1]` under the AMM             |
 | `lp_mint`         | `[b"pool_lp_mint", pool]` under the AMM                           |

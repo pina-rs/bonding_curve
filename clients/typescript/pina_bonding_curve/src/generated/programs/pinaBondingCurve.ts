@@ -14,7 +14,7 @@ import { getMigrateInstruction, type MigrateInput } from "../instructions";
 
 import { findAmmAuthorityPda, findLaunchConfigPda, findLaunchPda, findLaunchVaultPda } from '../pdas';
 
-export const PINA_BONDING_CURVE_PROGRAM_ADDRESS = 'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9' as Address<'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9'>;
+export const PINA_BONDING_CURVE_PROGRAM_ADDRESS = 'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP' as Address<'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP'>;
 
 export enum PinaBondingCurveAccount { LaunchConfig, Launch }
 
@@ -57,7 +57,7 @@ if (containsBytes(data, getU8Encoder().encode(9), 0)) { return PinaBondingCurveI
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, { instructionData: data, programName: "pinaBondingCurve" });
 }
 
-export type ParsedPinaBondingCurveInstruction<TProgram extends string = 'CurveqeE6jzkyHQMcWaGENzd7jrd8m9R1u4dZ17GnSa9'> =
+export type ParsedPinaBondingCurveInstruction<TProgram extends string = 'Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP'> =
 | { instructionType: PinaBondingCurveInstruction.CreateConfig } & ParsedCreateConfigInstruction<TProgram>
 | { instructionType: PinaBondingCurveInstruction.CreateLaunch } & ParsedCreateLaunchInstruction<TProgram>
 | { instructionType: PinaBondingCurveInstruction.Buy } & ParsedBuyInstruction<TProgram>
