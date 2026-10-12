@@ -172,6 +172,14 @@ impl<'a> ProcessAccountInfos<'a> for SetLaunchCreatorAccounts<'a> {
 			return Err(CurveError::DefaultCreator.into());
 		}
 		let launch_address = *self.launch.address();
+		// The launch PDA can never sign a transaction, and its LP payout would
+		// target the same token account the AMM mints graduation LP into,
+		// which the runtime rejects as a duplicate writable account. Accepting
+		// it would let a creator make a launch whose LP share is not zero
+		// impossible to graduate, locking every trader's quote forever.
+		if args.new_creator == launch_address {
+			return Err(CurveError::LaunchAsCreator.into());
+		}
 		let previous_creator;
 		{
 			let mut launch = self.launch.as_account_mut::<Launch>(&ID)?;

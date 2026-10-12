@@ -81,6 +81,7 @@ mod code {
 	pub const NOTHING_TO_CLAIM: u32 = 20;
 	pub const MISSING_LP_ACCOUNT: u32 = 21;
 	pub const DEFAULT_CREATOR: u32 = 22;
+	pub const LAUNCH_AS_CREATOR: u32 = 24;
 }
 
 /// The economic terms a test configuration uses.
@@ -1261,6 +1262,14 @@ fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 				.expect("data"),
 		);
 		h.expect_custom_error(&[set_default], &[&successor], code::DEFAULT_CREATOR);
+
+		// Nor may the launch itself: it can never sign, and its LP payout
+		// would alias the launch's own LP account, so graduation would fail.
+		let set_launch = SetLaunchCreator::new(successor.pubkey(), launch.launch).instruction(
+			SetLaunchCreatorInstructionData::new(|data| data.new_creator = launch.launch)
+				.expect("data"),
+		);
+		h.expect_custom_error(&[set_launch], &[&successor], code::LAUNCH_AS_CREATOR);
 		h.stop().expect("stop");
 	});
 }

@@ -59,4 +59,6 @@ pub enum CurveError {
 	DefaultCreator = 22,
 	/// The launch price no longer matches the migration price derived from its configuration.
 	MigrationPriceMismatch = 23,
+	/// The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.
+	LaunchAsCreator = 24,
 }
