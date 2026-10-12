@@ -19,6 +19,7 @@
 import { readFileSync } from "node:fs";
 
 import {
+	AccountRole,
 	type Address,
 	appendTransactionMessageInstructions,
 	createDefaultRpcTransport,
@@ -48,6 +49,7 @@ import {
 	getGraduateInstruction,
 	getSellInstruction,
 	getSetLaunchCreatorInstruction,
+	getSweepQuoteDustInstruction,
 } from "../src/index.js";
 
 /** The original SPL Token program, the program of every quote account. */
@@ -345,7 +347,45 @@ async function main(): Promise<void> {
 		],
 	);
 
-	// 6. ClaimPartnerFees — the partner empties its share.
+	// 9. SweepQuoteDust — quote sent straight to the vault backs nothing until
+	// it is swept into the fee balances. The donation is a raw SPL transfer:
+	// three accounts and the u64 discriminator-3 payload.
+	{
+		const amount = 5_000_000n;
+		const data = new Uint8Array(9);
+		data[0] = 3;
+		data.set(
+			(() => {
+				const bytes = new Uint8Array(8);
+				let value = amount;
+				for (let i = 0; i < 8; i += 1) {
+					bytes[i] = Number(value & 0xffn);
+					value >>= 8n;
+				}
+				return bytes;
+			})(),
+			1,
+		);
+		await sendAll(creator, [
+			{
+				programAddress: TOKEN_PROGRAM_ADDRESS,
+				accounts: [
+					{ address: fixtures.creatorQuote, role: AccountRole.WRITABLE },
+					{ address: quoteVault, role: AccountRole.WRITABLE },
+					{ address: creator.address, role: AccountRole.WRITABLE_SIGNER },
+				],
+				data,
+			} as Instruction,
+			getSweepQuoteDustInstruction({
+				config: configPda as Address,
+				launch,
+				quoteVault,
+				quoteTokenProgram: TOKEN_PROGRAM_ADDRESS,
+			}),
+		]);
+	}
+
+	// 6. ClaimPartnerFees — the partner empties its share, dust included.
 	await sendAll(
 		partner,
 		[
@@ -390,7 +430,7 @@ async function main(): Promise<void> {
 		],
 	);
 
-	// 9. SetLaunchCreator — hand the launch's creator rights to a fresh wallet.
+	// 10. SetLaunchCreator — hand the launch's creator rights to a fresh wallet.
 	const successor = await generateKeyPairSigner();
 	await sendAll(
 		creator,

@@ -49,6 +49,9 @@ pub enum CurveInstruction {
 	ClaimCreatorAllocation = 7,
 	/// Hand a launch's creator rights to another address.
 	SetLaunchCreator = 8,
+	/// Split quote donated above a launch's accounting into its fees.
+	#[dispatch(accounts = SweepQuoteDustAccounts)]
+	SweepQuoteDust = 9,
 }
 
 /// Data for `CurveInstruction::CreateConfig`.
@@ -140,6 +143,10 @@ pub struct ClaimCreatorFeesInstruction {}
 /// Data for `CurveInstruction::ClaimCreatorAllocation`.
 #[instruction(discriminator = CurveInstruction::ClaimCreatorAllocation)]
 pub struct ClaimCreatorAllocationInstruction {}
+
+/// Data for `CurveInstruction::SweepQuoteDust`.
+#[instruction(discriminator = CurveInstruction::SweepQuoteDust)]
+pub struct SweepQuoteDustInstruction {}
 
 /// Data for `CurveInstruction::SetLaunchCreator`.
 #[instruction(discriminator = CurveInstruction::SetLaunchCreator)]

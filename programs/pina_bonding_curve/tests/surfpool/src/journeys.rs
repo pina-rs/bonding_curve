@@ -1,7 +1,7 @@
 //! Every instruction, in one ordered journey, through every client that can
 //! talk to a live Surfnet.
 //!
-//! The Rust journey drives all nine instructions through the generated Rust
+//! The Rust journey drives all ten instructions through the generated Rust
 //! client in a single lifecycle, which also gives the performance benchmark
 //! one deterministic sample per instruction. The TypeScript journey drives
 //! the same lifecycle through the generated `@pina-rs/bonding-curve`
@@ -27,6 +27,8 @@ use pina_bonding_curve_client::instructions::ClaimPartnerFees;
 use pina_bonding_curve_client::instructions::ClaimPartnerFeesInstructionData;
 use pina_bonding_curve_client::instructions::SetLaunchCreator;
 use pina_bonding_curve_client::instructions::SetLaunchCreatorInstructionData;
+use pina_bonding_curve_client::instructions::SweepQuoteDust;
+use pina_bonding_curve_client::instructions::SweepQuoteDustInstructionData;
 use pina_test::Keypair;
 use pina_test::Pubkey;
 use pina_test::Signer;
@@ -241,6 +243,36 @@ fn every_instruction_runs_in_one_journey() {
 		)
 		.expect("graduate");
 		assert_eq!(launch_state(&h, &launch.launch).status, 2);
+
+		// SweepQuoteDust: quote sent straight to the vault backs nothing until
+		// it is swept into the fee balances; the claims below collect it.
+		let donor = trader(&h, &config, &launch, 5_000_000);
+		let donor_quote = crate::ata(
+			&donor.pubkey(),
+			&config.quote_mint,
+			&crate::harness::TOKEN_PROGRAM,
+		);
+		h.send(
+			&[crate::quote_transfer(
+				&donor.pubkey(),
+				&donor_quote,
+				&launch.quote_vault,
+				5_000_000,
+			)],
+			&[&donor],
+		)
+		.expect("donate");
+		h.send(
+			&[SweepQuoteDust::new(
+				config.address,
+				launch.launch,
+				launch.quote_vault,
+				crate::harness::TOKEN_PROGRAM,
+			)
+			.instruction(SweepQuoteDustInstructionData::new(|_| {}).expect("sweep data"))],
+			&[],
+		)
+		.expect("sweep");
 
 		let partner_quote = h
 			.create_ata(&config.partner.pubkey(), &config.quote_mint, &TOKEN_PROGRAM)

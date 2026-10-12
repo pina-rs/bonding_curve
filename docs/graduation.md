@@ -94,4 +94,4 @@ Append `creator` and `creator_lp_token` when `creator_lp_share` is above zero, a
 
 ## After graduation
 
-Trade the token through the Pina AMM: [`pina-amm`](https://github.com/pina-rs/amm/blob/main/docs/cli.md), [`@pina-rs/amm`](https://github.com/pina-rs/amm/blob/main/docs/typescript.md), [`pina_amm`](https://github.com/pina-rs/amm/blob/main/docs/dart.md), or [`pina_amm_client`](https://github.com/pina-rs/amm/blob/main/docs/rust-client.md). The launch account keeps the pool's address in `pool`.
+Trade the token through the Pina AMM: [`pina-amm`](https://github.com/pina-rs/amm/blob/main/docs/cli.md), [`@pina-rs/amm`](https://github.com/pina-rs/amm/blob/main/docs/typescript.md), [`pina_amm`](https://github.com/pina-rs/amm/blob/main/docs/dart.md), or [`pina_amm_client`](https://github.com/pina-rs/amm/blob/main/docs/rust-client.md). The launch account keeps the pool's address in `pool`. Quote that arrived in the vault above the launch's accounting — a donation or a mis-sent transfer — can be split into the creator's and partner's fees at any time with `SweepQuoteDust` (see [instructions.md](instructions.md#sweepquotedust)).

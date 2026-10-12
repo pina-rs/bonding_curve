@@ -175,16 +175,31 @@ Pays the allocation vested so far minus what was already claimed. Errors: `Unaut
 
 Moves future creator fees and the unclaimed allocation to `new_creator`. Errors: `Unauthorized`.
 
+## `SweepQuoteDust`
+
+Splits quote sent straight to a launch's quote vault above its accounting into the creator's and partner's fee balances, by the configuration's `creator_fee_share`. Permissionless and safe in every status: the reserve and accrued fees are never touched, and a vault with nothing above its accounting fails with `NothingToClaim`. Useful after a donation or a mis-sent transfer, before or after graduation.
+
+| Account               | Type          | Signer | Writable | Note                       |
+| --------------------- | ------------- | ------ | -------- | -------------------------- |
+| `config`              | LaunchConfig  |        |          | The launch's configuration |
+| `launch`              | Launch        |        | ✓        | The launch to sweep        |
+| `quote_vault`         | Token account |        |          | The launch's quote vault   |
+| `quote_token_program` | Program       |        |          | Owns the quote mint        |
+
+Emits `DustSwept`.
+
 ## Events
 
-| # | Event           | Fields                                                                                                               |
-| - | --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1 | `ConfigCreated` | `config`, `authority`, `quote_mint`, `amm_config`, `migration_sqrt_price`, `sale_supply`, `migration_supply`         |
-| 2 | `LaunchCreated` | `launch`, `config`, `creator`, `base_mint`, `total_supply`, `activation_time`                                        |
-| 3 | `Traded`        | `launch`, `trader`, `is_buy`, `base_amount`, `quote_amount`, `fee`, `creator_fee`, `sqrt_price`, `quote_reserve`     |
-| 4 | `Completed`     | `launch`, `quote_reserve`                                                                                            |
-| 5 | `Graduated`     | `launch`, `pool`, `pool_base`, `pool_quote`, `migration_fee`, `burned_base`, `burned_lp`, `creator_lp`, `partner_lp` |
-| 6 | `Claimed`       | `launch`, `claimant`, `kind`, `amount`                                                                               |
+| # | Event                  | Fields                                                                                                               |
+| - | ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1 | `ConfigCreated`        | `config`, `authority`, `quote_mint`, `amm_config`, `migration_sqrt_price`, `sale_supply`, `migration_supply`         |
+| 2 | `LaunchCreated`        | `launch`, `config`, `creator`, `base_mint`, `total_supply`, `activation_time`                                        |
+| 3 | `Traded`               | `launch`, `trader`, `is_buy`, `base_amount`, `quote_amount`, `fee`, `creator_fee`, `sqrt_price`, `quote_reserve`     |
+| 4 | `Completed`            | `launch`, `quote_reserve`                                                                                            |
+| 5 | `Graduated`            | `launch`, `pool`, `pool_base`, `pool_quote`, `migration_fee`, `burned_base`, `burned_lp`, `creator_lp`, `partner_lp` |
+| 6 | `Claimed`              | `launch`, `claimant`, `kind`, `amount`                                                                               |
+| 7 | `LaunchCreatorChanged` | `launch`, `previous_creator`, `new_creator`                                                                          |
+| 8 | `DustSwept`            | `launch`, `amount`, `creator_fee`, `partner_fee`                                                                     |
 
 In `Traded`, `quote_amount` is what the buyer paid (fee included) or what the seller received (fee deducted), and `sqrt_price` and `quote_reserve` are the values after the trade. Flags are `u8`: `1` for true and `0` for false. Decode events with the generated `parsePinaBondingCurveEventsFromLogs` (TypeScript and Dart), which only attributes records the curve itself emitted, not records from the AMM during graduation.
 
