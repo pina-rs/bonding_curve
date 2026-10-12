@@ -164,6 +164,12 @@ impl<'a> ProcessAccountInfos<'a> for CreateLaunchAccounts<'a> {
 impl<'a> ProcessAccountInfos<'a> for SetLaunchCreatorAccounts<'a> {
 	fn process(self, data: &[u8]) -> ProgramResult {
 		let args = SetLaunchCreatorInstruction::try_from_bytes(data)?;
+		// The default address can never sign, so creator fees and the vested
+		// allocation would become unclaimable, and a launch whose LP share is
+		// not zero could never graduate.
+		if args.new_creator == Address::default() {
+			return Err(CurveError::DefaultCreator.into());
+		}
 		let mut launch = self.launch.as_account_mut::<Launch>(&ID)?;
 		if &launch.creator != self.creator.address() {
 			return Err(CurveError::Unauthorized.into());

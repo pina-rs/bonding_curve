@@ -230,8 +230,16 @@ fn every_instruction_runs_in_one_journey() {
 		.expect("completing buy");
 		assert_eq!(launch_state(&h, &launch.launch).status, 1);
 
-		h.send(&[graduate_instruction(&h, &config, &launch, false)], &[])
-			.expect("graduate");
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				crate::LpRecipients::Omitted,
+			)],
+			&[],
+		)
+		.expect("graduate");
 		assert_eq!(launch_state(&h, &launch.launch).status, 2);
 
 		let partner_quote = h
