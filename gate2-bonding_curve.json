@@ -1,0 +1,6 @@
+{
+	"title": "ci: read the performance-approval label live in the gate",
+	"head": "fix/gate-reads-live-labels",
+	"base": "main",
+	"body": "A workflow re-run replays the original pull-request event, so `github.event.pull_request.labels` is the label snapshot from before the run started — applying `performance-approved` and re-running still failed the gate (#9 just hit exactly this). The enforce step now reads the labels from the API at enforcement time.\n\nWorkflow-only change; this PR's own performance run compares identical trees and the gate skips a fresh zero-delta report."
+}
