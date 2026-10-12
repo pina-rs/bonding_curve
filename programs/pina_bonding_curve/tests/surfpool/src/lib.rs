@@ -11,6 +11,7 @@
 
 mod cli;
 mod harness;
+mod journeys;
 
 use harness::AMM_PROGRAM;
 use harness::Harness;
@@ -89,6 +90,8 @@ struct Terms {
 	creator_lp_share: u32,
 	partner_lp_share: u32,
 	pool_creator_mode: u8,
+	/// Overrides the creator-vesting duration; `None` keeps the suite default.
+	vesting_seconds: Option<u64>,
 }
 
 impl Default for Terms {
@@ -101,6 +104,7 @@ impl Default for Terms {
 			creator_lp_share: 0,
 			partner_lp_share: 0,
 			pool_creator_mode: 0,
+			vesting_seconds: None,
 		}
 	}
 }
@@ -180,7 +184,8 @@ fn create_config_instruction(
 		data.total_supply.set(terms.total_supply);
 		data.creator_allocation.set(CREATOR_ALLOCATION);
 		data.creator_vesting_cliff.set(0);
-		data.creator_vesting_duration.set(VESTING_SECONDS);
+		data.creator_vesting_duration
+			.set(terms.vesting_seconds.unwrap_or(VESTING_SECONDS));
 		data.fee_decay_duration.set(terms.fee_decay);
 		data.start_fee_rate.set(terms.start_fee_rate);
 		data.end_fee_rate.set(END_FEE_RATE);
