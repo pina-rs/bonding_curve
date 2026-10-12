@@ -99,6 +99,30 @@ impl Curve {
 		})
 	}
 
+	/// Build a curve from fields read out of a stored `LaunchConfig`, without
+	/// revalidating them.
+	///
+	/// `CreateConfig` validates a curve before it stores one, a
+	/// `LaunchConfig` is immutable once created, and only this program writes
+	/// accounts it owns, so every stored curve already passed [`Curve::new`].
+	/// Re-checking sixteen segments on every trade would spend compute the
+	/// program already paid at creation.
+	#[must_use]
+	pub(crate) const fn from_stored(
+		start: u128,
+		uppers: [u128; MAX_SEGMENTS],
+		liquidities: [u128; MAX_SEGMENTS],
+		count: u8,
+	) -> Self {
+		Self {
+			start,
+			uppers,
+			liquidities,
+			// A widening cast of a count `CreateConfig` already checked.
+			count: count as usize,
+		}
+	}
+
 	/// The square-root price a new launch starts at.
 	#[must_use]
 	pub const fn start(&self) -> u128 {

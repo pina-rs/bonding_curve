@@ -47,7 +47,12 @@ pub const fn full_mul(a: u128, b: u128) -> (u128, u128) {
 ///
 /// Returns `None` when the divisor is zero or the quotient does not fit in
 /// `u128`.
+///
+/// Never inlined: the restoring-division loop is large enough that a copy per
+/// caller costs more program size than the call costs compute, and every trade
+/// pays for program rent only once.
 #[must_use]
+#[inline(never)]
 pub fn div_wide(high: u128, low: u128, divisor: u128, rounding: Rounding) -> Option<u128> {
 	if divisor == 0 || high >= divisor {
 		return None;

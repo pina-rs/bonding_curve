@@ -7,7 +7,7 @@ use pina_amm_cpi::ProgramAccount;
 
 use super::common::ConfigSnapshot;
 use super::common::LaunchSnapshot;
-use super::common::with_launch_signer;
+use super::common::launch_signer_seeds;
 use crate::ID;
 use crate::curve::seed_pool;
 use crate::errors::CurveError;
@@ -20,6 +20,7 @@ use crate::state::AmmAuthority;
 use crate::state::Launch;
 use crate::state::LaunchStatus;
 use crate::state::PoolCreatorMode;
+use crate::token::burn_signed;
 use crate::token::vault_amount;
 
 /// The Pina AMM's creator fee mode that pins the creator fee to token 0.
@@ -152,15 +153,10 @@ impl GraduateAccounts<'_> {
 			token_program: self.lp_token_program,
 		}
 		.invoke()?;
-		with_launch_signer(launch, |signer| {
-			token::instructions::Transfer::new(
-				self.launch_lp_token,
-				destination,
-				self.launch,
-				amount,
-			)
-			.invoke_signed(core::slice::from_ref(signer))
-		})
+		let seeds = launch_signer_seeds(launch);
+		let signer = seeds.to_signer();
+		token::instructions::Transfer::new(self.launch_lp_token, destination, self.launch, amount)
+			.invoke_signed(core::slice::from_ref(&signer.as_signer()))
 	}
 }
 
@@ -254,7 +250,7 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 				AMM_CREATOR_FEE_TOKEN_0,
 			)
 		};
-		let launch_seeds = Launch::seeds(&launch.base_mint).with_bump(launch.bump);
+		let launch_seeds = launch_signer_seeds(&launch);
 		let launch_signer = launch_seeds.to_signer();
 		let authority_seeds = AmmAuthority::seeds().with_bump(amm_authority_bump);
 		let authority_signer = authority_seeds.to_signer();
@@ -315,30 +311,27 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 			&config.authority,
 			partner_lp,
 		)?;
-		with_launch_signer(&launch, |signer| {
-			if burned_lp > 0 {
-				token::instructions::Burn::new(
-					self.launch_lp_token,
-					self.lp_mint,
-					self.launch,
-					burned_lp,
-				)
-				.invoke_signed(core::slice::from_ref(signer))?;
-			}
-			if plan.burned_base > 0 {
-				token::instructions::Burn::new(
-					self.base_vault,
-					self.base_mint,
-					self.launch,
-					plan.burned_base,
-				)
-				.invoke_signed_with_program(
-					core::slice::from_ref(signer),
-					self.base_token_program.address(),
-				)?;
-			}
-			Ok(())
-		})?;
+		let seeds = launch_signer_seeds(&launch);
+		let signer = seeds.to_signer();
+		if burned_lp > 0 {
+			token::instructions::Burn::new(
+				self.launch_lp_token,
+				self.lp_mint,
+				self.launch,
+				burned_lp,
+			)
+			.invoke_signed(core::slice::from_ref(&signer.as_signer()))?;
+		}
+		if plan.burned_base > 0 {
+			burn_signed(
+				self.base_vault,
+				self.base_mint,
+				self.launch,
+				self.base_token_program,
+				plan.burned_base,
+				&signer.as_signer(),
+			)?;
+		}
 
 		Graduated::emit(|event| {
 			event.launch = *self.launch.address();
