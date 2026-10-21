@@ -1,0 +1,145 @@
+name: deploy-devnet
+
+# Upgrades the devnet program to every release, then opens a pull request that
+# records the migration publication receipt. release-pr.yml dispatches this
+# workflow on the release tag, because a GITHUB_TOKEN tag push cannot trigger
+# another workflow; the tag trigger remains as a fallback for tags pushed with
+# other credentials.
+#
+# The job upgrades by the declared program ID (`pina deploy --upgrade-only`),
+# signed by a devnet-only key, and never holds the program keypair: that key
+# also controls the program's address on mainnet. Mainnet is never deployed
+# from CI; see docs/deploying.md.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy (for example v0.2.0). Used by the automated release handoff and manual retries."
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  # One devnet upgrade at a time, and never cancel one mid-flight: a killed
+  # `solana program deploy` can leave a funded buffer and a pending receipt.
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  deploy:
+    name: upgrade devnet and record the publication
+    # Holds DEVNET_DEPLOY_KEYPAIR; restrict the environment to `v*` tags.
+    environment: devnet
+    permissions:
+      contents: write # Push the publication receipt branch.
+      pull-requests: write # Open the publication receipt pull request.
+    if: >-
+      github.repository_owner == 'pina-rs' &&
+      startsWith(inputs.tag || github.ref_name, 'v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: validate release tag input
+        run: |
+          set -euo pipefail
+          if [[ "$RELEASE_TAG" != v* ]]; then
+            echo "::error::Tag '$RELEASE_TAG' must be a release tag like v0.1.0" >&2
+            exit 1
+          fi
+        shell: bash
+
+      - name: checkout release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: install nix
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            accept-flake-config = true
+            extra-substituters = https://devenv.cachix.org
+            extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=
+
+      - name: install locked devenv
+        run: |
+          devenv_revision="$(
+            nix eval --impure --raw --expr '
+              let
+                lock = builtins.fromJSON (builtins.readFile ./devenv.lock);
+              in
+                lock.nodes.devenv.locked.rev
+            '
+          )"
+          nix profile add --accept-flake-config "github:cachix/devenv/${devenv_revision}#devenv"
+
+      # The key is both the devnet upgrade authority and the fee payer. It is
+      # written owner-only, because `pina deploy` rejects a readable keypair.
+      - name: write the devnet deploy keypair
+        env:
+          DEVNET_DEPLOY_KEYPAIR: ${{ secrets.DEVNET_DEPLOY_KEYPAIR }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DEVNET_DEPLOY_KEYPAIR" ]; then
+            echo "::error::The devnet environment has no DEVNET_DEPLOY_KEYPAIR secret; see docs/deploying.md." >&2
+            exit 1
+          fi
+          keypair="$RUNNER_TEMP/devnet-deploy-keypair.json"
+          (umask 077 && printf '%s' "$DEVNET_DEPLOY_KEYPAIR" > "$keypair")
+          {
+            echo "PINA_CURVE_UPGRADE_AUTHORITY=$keypair"
+            echo "PINA_CURVE_DEPLOY_KEYPAIR=$keypair"
+          } >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: upgrade the devnet program
+        run: deploy:program:upgrade devnet --yes
+        shell: devenv shell -- bash -e {0}
+
+      - name: remove the devnet deploy keypair
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/devnet-deploy-keypair.json"
+        shell: bash
+
+      # A GITHUB_TOKEN pull request starts no CI run, so check the receipt here.
+      - name: check the recorded publication
+        run: pina migrations check --project programs/pina_bonding_curve
+        shell: devenv shell -- bash -e {0}
+
+      - name: open the publication pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          receipts=programs/pina_bonding_curve/migrations/publications.json
+          if git diff --quiet -- "$receipts"; then
+            echo "The upgrade recorded no new publication receipt."
+            exit 0
+          fi
+
+          branch="chore/devnet-publication-${RELEASE_TAG}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --create "$branch"
+          git add -- "$receipts"
+          git commit --message "chore(release): record the ${RELEASE_TAG} devnet publication"
+          gh auth setup-git
+          git push origin "$branch"
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$branch" \
+            --title "chore(release): record the ${RELEASE_TAG} devnet publication" \
+            --body "deploy-devnet upgraded the devnet program to \`${RELEASE_TAG}\` in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}. This records its migration publication receipt, which freezes the schema versions now live on devnet. \`pina migrations check\` passed on the receipt before this pull request opened."
+        shell: devenv shell -- bash -e {0}

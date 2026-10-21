@@ -1,6 +1,6 @@
 # Deploying
 
-This is the runbook for deploying the program and preparing the Pina AMM tier its launches graduate into. Deploying is a manual, deliberate step: no script, hook, or CI job deploys automatically.
+This is the runbook for deploying the program and preparing the Pina AMM tier its launches graduate into. Every release upgrades devnet automatically (see [Devnet on every release](#devnet-on-every-release)). Every other deployment, including the first deployment anywhere and every mainnet deployment, is a manual, deliberate step: no other script, hook, or CI job deploys.
 
 ## Keys
 
@@ -27,11 +27,47 @@ devenv shell deploy:program mainnet-beta --allow-mainnet
 
 `deploy:program` wraps `pina deploy --build`, which builds the artifact, prints the complete plan, asks for confirmation, and **records the migration publication** in `programs/pina_bonding_curve/migrations/publications.json`. Commit that file after every deployment: it freezes the schema versions now live on chain, so a later change to an account layout must ship a migration instead of silently rewriting history. Never deploy with `solana program deploy` directly.
 
+If a deployment fails after it started, rerun the same command: it reconciles the pending receipt it left behind.
+
 Before upgrading a live deployment, rehearse it against recent traffic:
 
 ```sh
 devenv shell deploy:program mainnet-beta --allow-mainnet --rehearse
 ```
+
+## Devnet on every release
+
+Merging a release pull request dispatches `deploy-devnet.yml` on the new `v*` tag. The job runs `deploy:program:upgrade devnet --yes`, which builds the tagged program and upgrades the devnet deployment through `pina deploy --upgrade-only`. It then runs `pina migrations check` and opens a `chore(release): record the v{version} devnet publication` pull request with the new receipt. Merge that pull request to commit the receipt. A run that fails is retried from the Actions tab or with `gh workflow run deploy-devnet.yml --ref v{version} --field tag=v{version}`.
+
+The job upgrades by the declared program ID and never holds the program keypair, which also controls `Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP` on mainnet. Its one key is a devnet-only keypair that is both the devnet upgrade authority and the fee payer, so a leak can reach nothing beyond devnet. The first devnet deployment, and every mainnet deployment, stays manual.
+
+A maintainer sets this up once:
+
+1. Create a devnet-only keypair, and use it for nothing else:
+
+   ```sh
+   solana-keygen new --no-bip39-passphrase --outfile ~/secure/devnet-ci-authority.json
+   ```
+
+2. Hand it the devnet upgrade authority, signing with the current authority:
+
+   ```sh
+   solana program set-upgrade-authority Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP -u devnet \
+     --upgrade-authority ~/secure/upgrade-authority.json \
+     --new-upgrade-authority ~/secure/devnet-ci-authority.json
+   ```
+
+3. Fund it: an upgrade temporarily holds the program's size in a rent-exempt buffer, about 1 SOL for this program, so keep a few SOL on it.
+
+   ```sh
+   solana transfer -u devnet --allow-unfunded-recipient "$(solana-keygen pubkey ~/secure/devnet-ci-authority.json)" 5
+   ```
+
+4. Create a `devnet` environment in the repository settings, restrict it to tags matching `v*`, and store the keypair file's contents as its `DEVNET_DEPLOY_KEYPAIR` secret:
+
+   ```sh
+   gh secret set DEVNET_DEPLOY_KEYPAIR --env devnet --repo pina-rs/bonding_curve < ~/secure/devnet-ci-authority.json
+   ```
 
 ## The AMM tier
 

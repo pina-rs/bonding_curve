@@ -199,8 +199,9 @@ jobs:
         shell: devenv shell -- bash -e {0}
 
       # A tag pushed with GITHUB_TOKEN does not trigger another workflow. Use
-      # workflow_dispatch explicitly so publish.yml always receives the release.
-      - name: dispatch release publishing
+      # workflow_dispatch explicitly so publish.yml and deploy-devnet.yml
+      # always receive the release.
+      - name: dispatch release publishing and the devnet upgrade
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -231,6 +232,10 @@ jobs:
             # Dispatch on the tag itself: pub.dev only accepts trusted
             # publishing from a run whose ref is the release tag.
             gh workflow run publish.yml \
+              --repo "$GITHUB_REPOSITORY" \
+              --ref "$tag" \
+              --field "tag=$tag"
+            gh workflow run deploy-devnet.yml \
               --repo "$GITHUB_REPOSITORY" \
               --ref "$tag" \
               --field "tag=$tag"
