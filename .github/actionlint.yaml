@@ -1,0 +1,7 @@
+# actionlint 1.7.12 predates the `concurrency.queue` key GitHub Actions now
+# accepts (`queue: max` keeps every pending run instead of replacing it).
+# Drop this ignore once the pinned actionlint knows the key.
+paths:
+  .github/workflows/deploy-devnet.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
