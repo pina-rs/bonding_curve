@@ -74,6 +74,7 @@ mod code {
 	pub const UNSUPPORTED_MINT: u32 = 7;
 	pub const INVALID_BASE_MINT: u32 = 8;
 	pub const UNAUTHORIZED: u32 = 9;
+	pub const ACCOUNT_MISMATCH: u32 = 10;
 	pub const NOT_TRADING: u32 = 11;
 	pub const NOT_ACTIVE: u32 = 12;
 	pub const NOT_COMPLETED: u32 = 13;
@@ -1271,6 +1272,13 @@ fn creator_handover_requires_acceptance_and_preserves_graduation() {
 			code::INVALID_LP_RECIPIENT,
 		);
 		let successor = h.funded_keypair().expect("successor");
+		let mut mismatched_acceptance = handover(Pubkey::new_unique());
+		mismatched_acceptance.accounts[2].pubkey = successor.pubkey();
+		h.expect_custom_error(
+			&[mismatched_acceptance],
+			&[&launch.creator, &successor],
+			code::ACCOUNT_MISMATCH,
+		);
 		h.send(
 			&[handover(successor.pubkey())],
 			&[&launch.creator, &successor],
@@ -1302,7 +1310,7 @@ fn creator_handover_requires_acceptance_and_preserves_graduation() {
 
 #[test]
 #[ignore = "run with `devenv shell test:surfpool`"]
-fn base_mint_cannot_be_an_immutable_partner_lp_recipient() {
+fn base_mint_cannot_be_an_lp_recipient() {
 	pina_test::run(async {
 		let h = Harness::start().await.expect("start");
 		let amm = setup_amm(&h);
@@ -1319,6 +1327,7 @@ fn base_mint_cannot_be_an_immutable_partner_lp_recipient() {
 				&quote_mint,
 				&amm.tier,
 				Terms {
+					creator_lp_share: 100_000,
 					partner_lp_share: 100_000,
 					..Terms::default()
 				},
@@ -1347,6 +1356,31 @@ fn base_mint_cannot_be_an_immutable_partner_lp_recipient() {
 		assert_eq!(
 			h.mint_authority(&config.partner.pubkey()),
 			Some(creator.pubkey())
+		);
+		let self_creator = Keypair::new();
+		h.create_mint_with_authority(
+			&self_creator,
+			&TOKEN_2022_PROGRAM,
+			6,
+			&self_creator.pubkey(),
+			&[],
+		)
+		.expect("mint with itself as creator");
+		h.expect_custom_error(
+			&[create_launch_instruction(
+				&h,
+				&config,
+				&self_creator.pubkey(),
+				&self_creator.pubkey(),
+				0,
+			)],
+			&[&self_creator],
+			code::INVALID_LP_RECIPIENT,
+		);
+		assert_eq!(h.mint_supply(&self_creator.pubkey()), 0);
+		assert_eq!(
+			h.mint_authority(&self_creator.pubkey()),
+			Some(self_creator.pubkey())
 		);
 		h.stop().expect("stop");
 	});
