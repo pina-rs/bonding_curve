@@ -73,4 +73,7 @@ pub enum CliError {
 	/// Instruction data rejected the provided values.
 	#[error("instruction data rejected the provided values")]
 	InvalidInstructionData,
+	/// The selected or generated mint does not have the required base role.
+	#[error("base mint must sort before the quote mint; provide a compatible --base-mint")]
+	InvalidMintOrder,
 }

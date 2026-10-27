@@ -82,6 +82,7 @@ mod code {
 	pub const MISSING_LP_ACCOUNT: u32 = 21;
 	pub const DEFAULT_CREATOR: u32 = 22;
 	pub const LAUNCH_AS_CREATOR: u32 = 24;
+	pub const INVALID_MINT_ORDER: u32 = 26;
 }
 
 /// The economic terms a test configuration uses.
@@ -287,7 +288,7 @@ fn launch_fixture(
 	creator: &Keypair,
 	activation_time: u64,
 ) -> LaunchFixture {
-	let mint = Keypair::new();
+	let mint = compatible_base_mint(&config.quote_mint);
 	h.create_mint_with_authority(
 		&mint,
 		&TOKEN_2022_PROGRAM,
@@ -329,6 +330,69 @@ fn create_launch_at(h: &Harness, config: &Config, activation_time: u64) -> Launc
 
 fn create_launch(h: &Harness, config: &Config) -> LaunchFixture {
 	create_launch_at(h, config, 0)
+}
+
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
+fn reciprocal_launch_is_rejected_before_trading() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let mut mints = [Keypair::new(), Keypair::new()];
+		mints.sort_by_key(Signer::pubkey);
+
+		for mint in &mints {
+			h.create_mint_with_authority(mint, &TOKEN_PROGRAM, 6, &h.payer().pubkey(), &[])
+				.expect("mint");
+		}
+
+		let mut configs = Vec::new();
+
+		for quote_mint in [mints[1].pubkey(), mints[0].pubkey()] {
+			let partner = h.funded_keypair().expect("partner");
+			h.send(
+				&[create_config_instruction(
+					&h,
+					&partner,
+					0,
+					&quote_mint,
+					&amm.tier,
+					Terms::default(),
+				)],
+				&[&partner],
+			)
+			.expect("config");
+			configs.push(Config {
+				address: LaunchConfig::find_pda(&partner.pubkey(), 0).0,
+				partner,
+				quote_mint,
+				amm_tier: amm.tier,
+			});
+		}
+
+		let base = mints[0].pubkey();
+		let mut accepted =
+			create_launch_instruction(&h, &configs[0], &h.payer().pubkey(), &base, 0);
+		accepted.accounts[8].pubkey = TOKEN_PROGRAM;
+		h.send(&[accepted], &[]).expect("canonical launch");
+		let reciprocal_base = mints[1].pubkey();
+		let mut rejected =
+			create_launch_instruction(&h, &configs[1], &h.payer().pubkey(), &reciprocal_base, 0);
+		rejected.accounts[8].pubkey = TOKEN_PROGRAM;
+		h.expect_custom_error(&[rejected], &[], code::INVALID_MINT_ORDER);
+		assert!(h.account(&Launch::find_pda(&reciprocal_base).0).is_none());
+		assert_eq!(h.mint_supply(&reciprocal_base), 0);
+		assert_eq!(h.mint_authority(&reciprocal_base), Some(h.payer().pubkey()));
+		h.stop().expect("stop");
+	});
+}
+
+/// Choose a new base key in the protocol's canonical mint order.
+fn compatible_base_mint(quote: &Pubkey) -> Keypair {
+	(0..4096)
+		.map(|_| Keypair::new())
+		.find(|mint| mint.pubkey() < *quote)
+		.expect("compatible base mint")
 }
 
 fn launch_state(h: &Harness, launch: &Pubkey) -> LaunchState {
@@ -670,7 +734,7 @@ fn launches_mint_a_fixed_supply_and_revoke_the_mint_authority() {
 
 		// The creator must control the mint they launch.
 		let creator = h.funded_keypair().expect("creator");
-		let mint = Keypair::new();
+		let mint = compatible_base_mint(&config.quote_mint);
 		h.create_mint_with_authority(&mint, &TOKEN_2022_PROGRAM, 6, &h.payer().pubkey(), &[])
 			.expect("mint");
 		h.expect_custom_error(
@@ -1405,7 +1469,7 @@ fn compute_units_stay_within_budget() {
 		);
 
 		let creator = h.funded_keypair().expect("creator");
-		let mint = Keypair::new();
+		let mint = compatible_base_mint(&config.quote_mint);
 		h.create_mint_with_authority(
 			&mint,
 			&TOKEN_2022_PROGRAM,

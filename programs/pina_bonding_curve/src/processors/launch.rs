@@ -77,6 +77,13 @@ impl<'a> ProcessAccountInfos<'a> for CreateLaunchAccounts<'a> {
 			config.base_decimals,
 		)?;
 
+		// The AMM has one canonical pool per unordered pair and tier. Assign
+		// the smaller mint to the base role before accepting any launch funds,
+		// so a reciprocal launch can never reserve the same graduation pool.
+		if self.base_mint.address() >= self.quote_mint.address() {
+			return Err(CurveError::InvalidMintOrder.into());
+		}
+
 		let current = now()?;
 		let requested =
 			i64::try_from(args.activation_time.get()).map_err(|_| CurveError::MathOverflow)?;

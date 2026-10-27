@@ -86,7 +86,7 @@ pina-curve launch create --config <CONFIG> --token-2022
 pina-curve launch create --config <CONFIG> --base-mint <MINT> --activation-time 1767225600
 ```
 
-The signer is the creator. A mint you bring must be empty, have no freeze authority, use the configuration's decimals, and have the signer as its mint authority; the launch revokes that authority after minting the fixed supply. Without `--base-mint`, the CLI generates the mint keypair and signs with it.
+The signer is the creator. A mint you bring must be empty, have no freeze authority, use the configuration's decimals, have the signer as its mint authority, and sort before the quote mint by address bytes; the launch revokes that authority after minting the fixed supply. Without `--base-mint`, the CLI generates a compatible mint keypair and signs with it. The mint ordering prevents reciprocal launches from claiming the same graduation pool.
 
 ```sh
 pina-curve launch show --base-mint <MINT>
