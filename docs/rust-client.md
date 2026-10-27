@@ -297,7 +297,7 @@ The graduated pool is an ordinary Pina AMM pool, and the launch records its addr
 | `ClaimPartnerFees`       | the configuration's authority | Pays the launch's unclaimed partner fees, in quote                 |
 | `ClaimCreatorFees`       | the launch's creator          | Pays the launch's unclaimed creator fees, in quote                 |
 | `ClaimCreatorAllocation` | the launch's creator          | Pays the vested, unclaimed part of the creator allocation, in base |
-| `SetLaunchCreator`       | the launch's creator          | Hands the creator's fee and allocation rights to `new_creator`     |
+| `SetLaunchCreator`       | both creators                 | Hands the creator's fee and allocation rights to `new_creator`     |
 
 ```rust
 use pina_bonding_curve_client::instructions::{ClaimCreatorFees, ClaimCreatorFeesInstructionData};
