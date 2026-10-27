@@ -367,7 +367,6 @@ pub fn derive_quantities(curve: &Curve, threshold: u64) -> Result<Quantities, Pr
 	}
 	let mut remaining = threshold;
 	let mut sale_supply = 0u64;
-	let mut migration_quote = 0u64;
 	for index in 0..curve.len() {
 		let segment = curve.segment(index);
 		let full = quote_delta(
@@ -392,27 +391,26 @@ pub fn derive_quantities(curve: &Curve, threshold: u64) -> Result<Quantities, Pr
 				Rounding::Up,
 			)?)
 			.ok_or(CurveError::MathOverflow)?;
-		migration_quote = migration_quote
-			.checked_add(quote_delta(
+		remaining = remaining
+			.checked_sub(quote_delta(
 				segment.lower,
 				upper,
 				segment.liquidity,
 				Rounding::Up,
 			)?)
 			.ok_or(CurveError::MathOverflow)?;
-		remaining = remaining.saturating_sub(full);
 		if upper < segment.upper || remaining == 0 {
 			// A price tick can cost more than one quote unit. Flooring the price
 			// must not silently reduce the amount this configuration promises.
-			if migration_quote != threshold {
+			if remaining != 0 {
 				return Err(CurveError::InvalidMigrationThreshold.into());
 			}
 
 			return Ok(Quantities {
 				migration_sqrt_price: upper,
 				sale_supply,
-				migration_quote,
-				migration_supply: base_for_quote(migration_quote, upper, Rounding::Up)?,
+				migration_quote: threshold,
+				migration_supply: base_for_quote(threshold, upper, Rounding::Up)?,
 			});
 		}
 	}
@@ -591,6 +589,28 @@ mod tests {
 		let quantities = derive_quantities(&curve, 1_500_000_000).expect("exact threshold");
 		assert_eq!(quantities.migration_quote, 1_500_000_000);
 		assert_eq!(quantities.migration_sqrt_price, Q64 + 2);
+	}
+
+	#[test]
+	fn checks_the_remaining_threshold_after_crossing_a_segment() {
+		let mut uppers = [0; MAX_SEGMENTS];
+		let mut liquidities = [0; MAX_SEGMENTS];
+		uppers[0] = Q64 + 1;
+		uppers[1] = Q64 + 17;
+		liquidities[0] = 500_000_000 * Q64;
+		liquidities[1] = 750_000_000 * Q64;
+		let curve = Curve::new(Q64, uppers, liquidities, 2).expect("curve");
+		assert_eq!(
+			derive_quantities(&curve, 1_500_000_000),
+			Err(CurveError::InvalidMigrationThreshold.into())
+		);
+		let quantities = derive_quantities(&curve, 2_000_000_000).expect("exact threshold");
+		assert_eq!(quantities.migration_quote, 2_000_000_000);
+		assert_eq!(quantities.migration_sqrt_price, Q64 + 3);
+		let result = buy(&curve, Q64, u64::MAX / 2, quantities.migration_sqrt_price)
+			.expect("completing buy");
+		assert!(result.completed);
+		assert_eq!(result.quote_used, 2_000_000_000);
 	}
 
 	#[test]
