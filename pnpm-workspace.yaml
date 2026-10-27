@@ -14,3 +14,6 @@ onlyBuiltDependencies:
 # and GHSA-rgj7-g3m4-5g8c. 0.35.5 is the patched release of the same minor line.
 overrides:
   sharp: 0.35.5
+  # Miniflare pins an affected undici release; stay on its patched 7.x line.
+  # GHSA-xjj6-f33q-929c is fixed in 7.30.1.
+  undici@7.29.1: 7.30.1

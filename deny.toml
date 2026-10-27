@@ -8,6 +8,13 @@ ignore = [
 	# solana-rpc-client depends on bincode 1.3.3, which is flagged as
 	# unmaintained. Only the CLI links it; remove once solana-client upgrades.
 	{ id = "RUSTSEC-2025-0141", reason = "bincode 1.3.3 is a transitive dependency of solana-rpc-client" },
+	# The SDK still requires zstd 0.13 / zstd-safe 7. These API-specific
+	# findings are unreachable in the pinned RPC account decoder; the exact
+	# call paths, selected features, and removal criteria are documented in
+	# docs/security.md. zstd-sys is upgraded rather than excepted.
+	{ id = "RUSTSEC-2026-0391", reason = "RPC decoding constructs a fresh owned read::Decoder per account; no borrowed with_context API is used" },
+	{ id = "RUSTSEC-2026-0398", reason = "zstd-safe seekable feature is absent from the workspace graph, so the affected API is not compiled" },
+	{ id = "RUSTSEC-2026-0403", reason = "RPC decoding uses read::Decoder, which the advisory explicitly identifies as unaffected; write::Decoder is not used" },
 ]
 
 [bans]

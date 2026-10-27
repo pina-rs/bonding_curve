@@ -70,6 +70,30 @@ The program has no admin role and no pause switch. The upgrade authority is the 
 
 `devenv shell lint:all` runs Pina's official security lint set, which rejects unchecked asset arithmetic, missing signer or owner checks, and inconsistent token-program usage, alongside `clippy -D warnings`.
 
+## Host RPC compression advisories
+
+The native CLI's Solana RPC dependencies bring in `zstd 0.13.3` and `zstd-safe 7.3.0`. The on-chain program and generated clients do not link this RPC stack. The SDK requires `zstd ^0.13.3`, which in turn requires `zstd-safe ^7.1.0`; the patched `zstd 0.14.3` and `zstd-safe 8.2.0` releases are outside those constraints. `zstd-sys` is updated to `2.1.2`, fixing [RUSTSEC-2026-0410](https://rustsec.org/advisories/RUSTSEC-2026-0410.html) without an exception.
+
+The separate Surfpool test workspace also locks `zstd-sys 2.1.2`, so its `cargo test --locked` run uses the same patched native library.
+
+The three exceptions in `deny.toml` were reviewed against the locked graph on 2026-10-27:
+
+| Advisory                                                                   | Why the affected path is unreachable                                                                                                                                                                                                                                                        |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [RUSTSEC-2026-0391](https://rustsec.org/advisories/RUSTSEC-2026-0391.html) | `solana-account-decoder-client-types 4.2.2` decodes each account with a fresh `zstd::stream::read::Decoder::new`. This constructs an owned context through `raw::Decoder::with_dictionary`, not the affected borrowed `with_context` constructors. Contexts are not reused across accounts. |
+| [RUSTSEC-2026-0398](https://rustsec.org/advisories/RUSTSEC-2026-0398.html) | The workspace graph does not enable `zstd-safe/seekable`. The affected `seekable` module and its decompress methods are not compiled.                                                                                                                                                       |
+| [RUSTSEC-2026-0403](https://rustsec.org/advisories/RUSTSEC-2026-0403.html) | Account decoding uses `read::Decoder`, which the advisory explicitly identifies as unaffected. Neither the CLI nor its RPC account decoder uses `write::Decoder` or exposes a partially decoded buffer on failure.                                                                          |
+
+Verify the selected features and dependency parents with:
+
+```sh
+devenv shell -- cargo tree --workspace --all-features --locked -e features -i zstd-safe
+devenv shell -- cargo tree --workspace --all-features --locked -i zstd
+devenv shell -- cargo deny check -D warnings advisories bans sources
+```
+
+Reassess these exceptions whenever the RPC SDK, compression call paths, or selected features change. Remove them when the SDK accepts the patched releases. All other advisory, source, and dependency-ban checks remain enforced.
+
 ## Known limitations
 
 - **AMM tier rates can change before graduation.** A configuration pins its tier's address, not its rates: the tier's authority may change them at any time, and a pool snapshots whatever the tier says when it is created. A graduating launch therefore pays the tier's current rates, bounded by the AMM's own 10% cap. Use a tier whose authority you trust, and re-read its rates before relying on them.
