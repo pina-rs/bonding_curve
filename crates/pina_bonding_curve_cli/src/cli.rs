@@ -180,7 +180,8 @@ pub struct CreateLaunchArgs {
 	#[arg(long)]
 	pub config: Pubkey,
 	/// An existing mint to launch: empty, without a freeze authority, and
-	/// controlled by the signer. Omit it to create a new mint.
+	/// controlled by the signer. It must sort after the quote mint by address
+	/// bytes. Omit it to create a compatible new mint.
 	#[arg(long)]
 	pub base_mint: Option<Pubkey>,
 	/// Create the new mint under Token-2022 instead of SPL Token.

@@ -232,5 +232,6 @@ In `Traded`, `quote_amount` is what the buyer paid (fee included) or what the se
 | 22   | `DefaultCreator`                 | The new creator is the default address, which can never sign                |
 | 23   | `MigrationPriceMismatch`         | The launch price no longer matches the configuration's migration price      |
 | 24   | `LaunchAsCreator`                | The new creator is the launch itself, which can never sign or receive LP    |
+| 26   | `InvalidMintOrder`               | The base mint does not sort after the quote mint by address bytes           |
 
 Pina's own framework errors use codes `0xFFFF0000` and above, for example `DuplicateMutableAccount` when the same writable account appears twice.

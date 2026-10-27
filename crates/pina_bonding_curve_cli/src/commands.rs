@@ -177,7 +177,16 @@ fn create_launch(context: &Context, args: &CreateLaunchArgs) -> Result<(), CliEr
 	let signer = context.signer();
 	let quote_program = token_program_of(context, &config.quote_mint)?;
 	let mut instructions = Vec::new();
-	let new_mint = args.base_mint.is_none().then(Keypair::new);
+	let new_mint = if args.base_mint.is_none() {
+		Some(
+			(0..4096)
+				.map(|_| Keypair::new())
+				.find(|mint| mint.pubkey() > config.quote_mint)
+				.ok_or(CliError::InvalidMintOrder)?,
+		)
+	} else {
+		None
+	};
 	let (base_mint, base_program) = match (&new_mint, args.base_mint) {
 		(Some(mint), _) => {
 			let program = if args.token_2022 {
@@ -201,7 +210,13 @@ fn create_launch(context: &Context, args: &CreateLaunchArgs) -> Result<(), CliEr
 			));
 			(mint.pubkey(), program)
 		}
-		(None, Some(mint)) => (mint, token_program_of(context, &mint)?),
+		(None, Some(mint)) => {
+			if mint <= config.quote_mint {
+				return Err(CliError::InvalidMintOrder);
+			}
+
+			(mint, token_program_of(context, &mint)?)
+		}
 		(None, None) => unreachable!("a new mint is generated when none is given"),
 	};
 	let launch = launch_address(&base_mint);

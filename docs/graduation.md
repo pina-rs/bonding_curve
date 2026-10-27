@@ -70,6 +70,8 @@ The Pina AMM mints LP to the launch, which keeps none of it. With `creator_lp_sh
 
 Graduation creates the pool at its canonical address, `[b"pool", amm_config, mint_0, mint_1]` in the AMM. If someone could create that pool first, at a bad price, graduation would fail or start from the wrong price. The configuration's AMM tier must therefore be **restricted to this program's AMM authority PDA**, `[b"amm_authority"]` under the curve program. `CreateConfig` checks that the tier is owned by the Pina AMM and that its `pool_creator_authority` is that PDA, and rejects any other tier with `InvalidAmmConfig`. No one but the curve can create pools in it.
 
+`CreateLaunch` also requires `base_mint > quote_mint` by address bytes. The larger mint always has the base role, and each base mint has only one launch PDA. Two accepted launches therefore cannot reach the same unordered mint pair and AMM tier. A reciprocal launch is rejected with `InvalidMintOrder` before its supply is minted or trading starts. This rule needs no permissionless registration that could reserve another mint's role.
+
 ## Sending `Graduate`
 
 The CLI derives every account:

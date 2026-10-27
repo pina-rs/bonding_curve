@@ -49,7 +49,10 @@ payer: TAccountPayer;
 creator: TAccountCreator;
 /** The configuration the launch follows. */
 config: TAccountConfig;
-/** The base mint: new, empty, and controlled by the creator. */
+/**
+ * The base mint: new, empty, controlled by the creator, and sorting after
+ * the quote mint by address bytes.
+ */
 baseMint: TAccountBaseMint;
 /** The configuration's quote mint. */
 quoteMint: TAccountQuoteMint;
@@ -105,7 +108,10 @@ payer: TAccountPayer;
 creator: TAccountCreator;
 /** The configuration the launch follows. */
 config: TAccountConfig;
-/** The base mint: new, empty, and controlled by the creator. */
+/**
+ * The base mint: new, empty, controlled by the creator, and sorting after
+ * the quote mint by address bytes.
+ */
 baseMint: TAccountBaseMint;
 /** The configuration's quote mint. */
 quoteMint: TAccountQuoteMint;
@@ -159,7 +165,10 @@ payer: TAccountMetas[0];
 creator: TAccountMetas[1];
 /** The configuration the launch follows. */
 config: TAccountMetas[2];
-/** The base mint: new, empty, and controlled by the creator. */
+/**
+ * The base mint: new, empty, controlled by the creator, and sorting after
+ * the quote mint by address bytes.
+ */
 baseMint: TAccountMetas[3];
 /** The configuration's quote mint. */
 quoteMint: TAccountMetas[4];

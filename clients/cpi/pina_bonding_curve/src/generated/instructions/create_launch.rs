@@ -40,7 +40,8 @@ pub struct CreateLaunch<'account> {
 	pub config: &'account AccountView,
 
 	/// CPI account `baseMint`.
-	/// The base mint: new, empty, and controlled by the creator.
+	/// The base mint: new, empty, controlled by the creator, and sorting after
+	/// the quote mint by address bytes.
 	/// Required privileges: writable.
 	pub base_mint: &'account AccountView,
 
