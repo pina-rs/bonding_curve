@@ -124,7 +124,7 @@ fn simulate_then_send(
 	extra_signers: &[&Keypair],
 	discriminator: u8,
 ) -> Result<(Vec<u8>, u64, Option<String>), CliError> {
-	let simulation = context.simulate(instructions, extra_signers)?;
+	let simulation = context.simulate(instructions)?;
 	let event = simulation
 		.events
 		.into_iter()
@@ -389,7 +389,7 @@ fn simulate_trade(
 	} else {
 		market.sell(&trader, amount, 0)?
 	});
-	let simulation = context.simulate(&instructions, &[])?;
+	let simulation = context.simulate(&instructions)?;
 	let event = simulation
 		.events
 		.iter()

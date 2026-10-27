@@ -117,14 +117,13 @@ impl Context {
 		Ok(transaction)
 	}
 
-	/// Simulate `instructions`, signed by the signer and `extra_signers`, and
-	/// collect the bonding curve's events.
-	pub fn simulate(
-		&self,
-		instructions: &[Instruction],
-		extra_signers: &[&Keypair],
-	) -> Result<Simulation, CliError> {
-		let transaction = self.transaction(instructions, extra_signers)?;
+	/// Simulate `instructions` without signing, and collect the bonding curve's
+	/// events. Signer account metas are preserved, but every signature is zero.
+	pub fn simulate(&self, instructions: &[Instruction]) -> Result<Simulation, CliError> {
+		// The RPC receives the wire transaction and could broadcast it. Simulation
+		// must never give it a valid signature, even with sig_verify disabled.
+		let message = Message::new(instructions, Some(&self.signer.pubkey()));
+		let transaction = Transaction::new_unsigned(message);
 		let result = self
 			.rpc
 			.simulate_transaction_with_config(
@@ -161,7 +160,7 @@ impl Context {
 		extra_signers: &[&Keypair],
 	) -> Result<Option<String>, CliError> {
 		if self.simulate_only {
-			let simulation = self.simulate(instructions, extra_signers)?;
+			let simulation = self.simulate(instructions)?;
 			if !self.json {
 				println!(
 					"simulation succeeded using {} compute units",
@@ -276,7 +275,129 @@ pub fn program_events(logs: &[String], program: &Pubkey) -> Vec<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
+	use std::io::BufRead;
+	use std::io::BufReader;
+	use std::io::Read;
+	use std::io::Write;
+	use std::net::TcpListener;
+	use std::thread;
+	use std::time::Duration;
+
+	use solana_instruction::AccountMeta;
+
 	use super::*;
+
+	/// Record the actual JSON-RPC request, allowing only simulation.
+	fn recording_simulator() -> (RpcClient, thread::JoinHandle<serde_json::Value>) {
+		let listener = TcpListener::bind("127.0.0.1:0").expect("bind RPC");
+		let address = listener.local_addr().expect("RPC address");
+		let request = thread::spawn(move || {
+			let (mut stream, _) = listener.accept().expect("RPC connection");
+			stream
+				.set_read_timeout(Some(Duration::from_secs(5)))
+				.expect("read timeout");
+			let mut reader = BufReader::new(&mut stream);
+			let mut length = None;
+
+			loop {
+				let mut line = String::new();
+				assert_ne!(reader.read_line(&mut line).expect("header"), 0);
+
+				if line == "\r\n" {
+					break;
+				}
+
+				if let Some(value) = line.to_ascii_lowercase().strip_prefix("content-length:") {
+					length = Some(value.trim().parse::<usize>().expect("body length"));
+				}
+			}
+
+			let mut body = vec![0; length.expect("Content-Length")];
+			reader.read_exact(&mut body).expect("request body");
+			let request: serde_json::Value = serde_json::from_slice(&body).expect("JSON-RPC");
+			assert_eq!(request["method"], "simulateTransaction");
+			let response = serde_json::json!({
+				"jsonrpc": "2.0", "id": request["id"],
+				"result": { "context": { "slot": 1 }, "value": {
+					"err": null, "logs": [], "unitsConsumed": 100
+				} }
+			})
+			.to_string();
+			write!(
+				stream,
+				"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: \
+				 {}\r\nConnection: close\r\n\r\n{response}",
+				response.len()
+			)
+			.expect("RPC response");
+			request
+		});
+		let rpc = RpcClient::new_with_timeout(format!("http://{address}"), Duration::from_secs(5));
+
+		(rpc, request)
+	}
+
+	#[test]
+	fn simulation_wire_payload_never_authorizes_a_transaction() {
+		for simulate_only in [false, true] {
+			let (rpc, request) = recording_simulator();
+			let signer = Keypair::new();
+			let extra = Keypair::new();
+			let instructions = [Instruction {
+				program_id: PINA_BONDING_CURVE_ID,
+				accounts: vec![AccountMeta::new_readonly(extra.pubkey(), true)],
+				data: vec![1],
+			}];
+			let expected = Message::new(&instructions, Some(&signer.pubkey()));
+			let context = Context {
+				rpc,
+				signer,
+				json: true,
+				simulate_only,
+			};
+
+			if simulate_only {
+				assert_eq!(
+					context.send(&instructions, &[&extra]).expect("preview"),
+					None
+				);
+			} else {
+				assert_eq!(context.simulate(&instructions).expect("quote").units, 100);
+			}
+
+			let request = request.join().expect("RPC request");
+			assert_eq!(request["params"][1]["sigVerify"], false);
+			assert_eq!(request["params"][1]["replaceRecentBlockhash"], true);
+			let wire = base64::engine::general_purpose::STANDARD
+				.decode(request["params"][0].as_str().expect("base64 transaction"))
+				.expect("decode transaction");
+			assert_eq!(wire[0], 2, "preserve both required signers");
+			assert!(wire[1..129].iter().all(|byte| *byte == 0));
+			assert_eq!(&wire[129..], expected.serialize());
+			assert!(Transaction::new_unsigned(expected).verify().is_err());
+		}
+	}
+
+	#[test]
+	fn broadcast_transactions_still_have_valid_signatures() {
+		let context = Context {
+			rpc: RpcClient::new_mock("succeeds".to_owned()),
+			signer: Keypair::new(),
+			json: true,
+			simulate_only: false,
+		};
+		let extra = Keypair::new();
+		let instruction = Instruction {
+			program_id: PINA_BONDING_CURVE_ID,
+			accounts: vec![AccountMeta::new_readonly(extra.pubkey(), true)],
+			data: vec![1],
+		};
+		let transaction = context
+			.transaction(&[instruction], &[&extra])
+			.expect("sign");
+		assert_eq!(transaction.signatures.len(), 2);
+		transaction.verify().expect("valid broadcast signatures");
+	}
 
 	#[test]
 	fn resolves_cluster_names_and_rejects_remote_http() {
