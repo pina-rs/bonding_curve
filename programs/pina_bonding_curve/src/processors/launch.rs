@@ -215,7 +215,7 @@ impl<'a> ProcessAccountInfos<'a> for SetLaunchCreatorAccounts<'a> {
 				return Err(CurveError::Unauthorized.into());
 			}
 
-			// Other mandatory writable graduation accounts are PDAs that cannot
+			// Other mutable graduation account slots are PDAs that cannot
 			// accept this handover. The base mint is the exception: its key can
 			// still sign after the token program takes ownership.
 			if args.new_creator == launch.base_mint {
