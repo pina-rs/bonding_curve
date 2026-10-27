@@ -25,8 +25,6 @@ use crate::token::vault_amount;
 
 /// The Pina AMM's creator fee mode that pins the creator fee to token 0.
 const AMM_CREATOR_FEE_TOKEN_0: u8 = 1;
-/// The Pina AMM's creator fee mode that pins the creator fee to token 1.
-const AMM_CREATOR_FEE_TOKEN_1: u8 = 2;
 
 /// Accounts for `Graduate`.
 ///
@@ -221,42 +219,7 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 			);
 		}
 
-		let base_is_0 = launch.base_mint.as_ref() < launch.quote_mint.as_ref();
-		let (
-			mint_0,
-			mint_1,
-			depositor_0,
-			depositor_1,
-			program_0,
-			program_1,
-			amount_0,
-			amount_1,
-			fee_mode,
-		) = if base_is_0 {
-			(
-				&*self.base_mint,
-				self.quote_mint,
-				&*self.base_vault,
-				&*self.quote_vault,
-				self.base_token_program,
-				self.quote_token_program,
-				plan.pool_base,
-				plan.pool_quote,
-				AMM_CREATOR_FEE_TOKEN_1,
-			)
-		} else {
-			(
-				self.quote_mint,
-				&*self.base_mint,
-				&*self.quote_vault,
-				&*self.base_vault,
-				self.quote_token_program,
-				self.base_token_program,
-				plan.pool_quote,
-				plan.pool_base,
-				AMM_CREATOR_FEE_TOKEN_0,
-			)
-		};
+		// CreateLaunch fixes the quote mint as token 0 for every launch.
 		let launch_seeds = launch_signer_seeds(&launch);
 		let launch_signer = launch_seeds.to_signer();
 		let authority_seeds = AmmAuthority::seeds().with_bump(amm_authority_bump);
@@ -266,26 +229,26 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 			depositor: self.launch,
 			pool_creator_authority: self.amm_authority,
 			amm_config: self.amm_config,
-			mint0: mint_0,
-			mint1: mint_1,
+			mint0: self.quote_mint,
+			mint1: self.base_mint,
 			pool: self.pool,
 			lp_mint: self.lp_mint,
 			vault0: self.pool_vault_0,
 			vault1: self.pool_vault_1,
-			depositor_token0: depositor_0,
-			depositor_token1: depositor_1,
+			depositor_token0: self.quote_vault,
+			depositor_token1: self.base_vault,
 			lp_owner: self.launch,
 			lp_owner_token: self.launch_lp_token,
-			token_program0: program_0,
-			token_program1: program_1,
+			token_program0: self.quote_token_program,
+			token_program1: self.base_token_program,
 			lp_token_program: self.lp_token_program,
 			associated_token_program: self.associated_token_program,
 			system_program: self.system_program,
 			ix: CreatePoolIx {
-				amount0: amount_0,
-				amount1: amount_1,
+				amount0: plan.pool_quote,
+				amount1: plan.pool_base,
 				creator: &pool_creator,
-				creator_fee_mode: fee_mode,
+				creator_fee_mode: AMM_CREATOR_FEE_TOKEN_0,
 			},
 		}
 		.invoke_signed(
