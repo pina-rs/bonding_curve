@@ -42,12 +42,12 @@ Static pages never reach the Worker: `wrangler.jsonc` runs it first only for `/a
 
 ## Deploy
 
-Every push to `main` that touches the site or the docs runs [`website.yml`](../.github/workflows/website.yml), which builds the site and runs `wrangler deploy`. To deploy by hand, export the two variables below and run `devenv shell deploy:website`.
+Every push to `main` that touches the site or the docs runs [`website.yml`](../.github/workflows/website.yml), which builds the site and runs `wrangler deploy`. Manual workflow runs also require `main`; the job skips other refs before requesting the deployment environment and always checks out `main`. To deploy by hand, use a reviewed `main` checkout, export the two variables below, and run `devenv shell deploy:website`.
 
 One-time setup, done by an owner of the Cloudflare account:
 
 1. Add the `pina.rs` zone to Cloudflare and point the domain's nameservers at it at the registrar. The Worker serves `bonding-curve.pina.rs` as a [custom domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/), which needs the zone in the same account.
 2. Create an API token from the **Edit Cloudflare Workers** template, limited to that account and the `pina.rs` zone.
-3. In the repository's settings, create a `website` environment. Add the account ID as the repository variable `CLOUDFLARE_ACCOUNT_ID` and the token as the environment secret `CLOUDFLARE_API_TOKEN`.
+3. In the repository's settings, create a `website` environment. Under **Deployment branches and tags**, select **Selected branches and tags** and allow only the branch `main`, with no tag rules. This hosted restriction is required: a workflow on another branch can modify its own job guard. Add a required deployment reviewer when the repository's GitHub plan supports it. Add the account ID as the repository variable `CLOUDFLARE_ACCOUNT_ID` and the token as the environment secret `CLOUDFLARE_API_TOKEN`.
 
 The deploy job is skipped until `CLOUDFLARE_ACCOUNT_ID` is set. Cloudflare's free plan covers the site: static assets are free, and the Worker only runs for API requests.
