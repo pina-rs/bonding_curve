@@ -15,8 +15,8 @@ const int pinaBondingCurveErrorInvalidFeeRates = 0x1; // 1
 /// Message: "The total supply cannot cover the sale, the AMM seed, and the creator allocation."
 const int pinaBondingCurveErrorInvalidSupply = 0x2; // 2
 
-/// The migration threshold is zero, too small to move the price, or beyond the curve.
-/// Message: "The migration threshold is zero, too small to move the price, or beyond the curve."
+/// The migration threshold must be positive, exactly representable, and reachable within the curve.
+/// Message: "The migration threshold must be positive, exactly representable, and reachable within the curve."
 const int pinaBondingCurveErrorInvalidMigrationThreshold = 0x3; // 3
 
 /// A share is above 100%, or the creator and partner LP shares exceed 100% together.
@@ -112,7 +112,7 @@ const Map<int, String> _pinaBondingCurveErrorMessages = {
   pinaBondingCurveErrorInvalidCurve: 'Curve segments must be non-empty, strictly increasing, in range, and have positive liquidity.',
   pinaBondingCurveErrorInvalidFeeRates: 'Fee rates are out of range or the start fee is below the end fee without a decay.',
   pinaBondingCurveErrorInvalidSupply: 'The total supply cannot cover the sale, the AMM seed, and the creator allocation.',
-  pinaBondingCurveErrorInvalidMigrationThreshold: 'The migration threshold is zero, too small to move the price, or beyond the curve.',
+  pinaBondingCurveErrorInvalidMigrationThreshold: 'The migration threshold must be positive, exactly representable, and reachable within the curve.',
   pinaBondingCurveErrorInvalidShares: 'A share is above 100%, or the creator and partner LP shares exceed 100% together.',
   pinaBondingCurveErrorInvalidVesting:
       'The vesting cliff and duration do not fit a timestamp.',

@@ -25,9 +25,9 @@ pub enum PinaBondingCurveError {
 	/// 2 - The total supply cannot cover the sale, the AMM seed, and the creator allocation.
 	#[error("The total supply cannot cover the sale, the AMM seed, and the creator allocation.")]
 	InvalidSupply = 0x2,
-	/// The migration threshold is zero, too small to move the price, or beyond the curve.
-	/// 3 - The migration threshold is zero, too small to move the price, or beyond the curve.
-	#[error("The migration threshold is zero, too small to move the price, or beyond the curve.")]
+	/// The migration threshold must be positive, exactly representable, and reachable within the curve.
+	/// 3 - The migration threshold must be positive, exactly representable, and reachable within the curve.
+	#[error("The migration threshold must be positive, exactly representable, and reachable within the curve.")]
 	InvalidMigrationThreshold = 0x3,
 	/// A share is above 100%, or the creator and partner LP shares exceed 100% together.
 	/// 4 - A share is above 100%, or the creator and partner LP shares exceed 100% together.

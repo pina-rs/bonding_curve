@@ -17,7 +17,7 @@ pub enum CurveError {
 	InvalidFeeRates = 1,
 	/// The total supply cannot cover the sale, the AMM seed, and the creator allocation.
 	InvalidSupply = 2,
-	/// The migration threshold is zero, too small to move the price, or beyond the curve.
+	/// The migration threshold must be positive, exactly representable, and reachable within the curve.
 	InvalidMigrationThreshold = 3,
 	/// A share is above 100%, or the creator and partner LP shares exceed 100% together.
 	InvalidShares = 4,
