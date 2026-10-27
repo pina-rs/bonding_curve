@@ -646,22 +646,22 @@ mod tests {
 		/// even when one representable price tick spans many quote units.
 		#[test]
 		fn accepted_thresholds_are_reached_exactly(
-			liquidity in prop_oneof![1u128..1_000_000_000_000_000, (1u128..1_000_000_000).prop_map(|value| value * Q64)],
-			threshold in 1u64..32_000_000_000,
+			liquidity in prop_oneof![1u128..1_000_000_000_000_000, Q64..(1_000_000_000 * Q64)],
+			ticks in 1u128..32,
 		) {
 			let mut uppers = [0; MAX_SEGMENTS];
 			let mut liquidities = [0; MAX_SEGMENTS];
-			uppers[0] = Q64 + 32;
+			uppers[0] = Q64 + 64;
 			liquidities[0] = liquidity;
 			let curve = Curve::new(Q64, uppers, liquidities, 1).expect("curve");
 
-			if let Ok(quantities) = derive_quantities(&curve, threshold) {
-				let result = buy(&curve, Q64, u64::MAX / 2, quantities.migration_sqrt_price).expect("completing buy");
-				prop_assert!(result.completed);
-				prop_assert_eq!(quantities.migration_quote, threshold);
-				prop_assert_eq!(result.quote_used, threshold);
-				prop_assert_eq!(quantities.migration_supply, base_for_quote(threshold, quantities.migration_sqrt_price, Rounding::Up).expect("migration supply"));
-			}
+			let threshold = quote_delta(Q64, Q64 + ticks, liquidity, Rounding::Up).expect("representable threshold");
+			let quantities = derive_quantities(&curve, threshold).expect("accept representable threshold");
+			let result = buy(&curve, Q64, u64::MAX / 2, quantities.migration_sqrt_price).expect("completing buy");
+			prop_assert!(result.completed);
+			prop_assert_eq!(quantities.migration_quote, threshold);
+			prop_assert_eq!(result.quote_used, threshold);
+			prop_assert_eq!(quantities.migration_supply, base_for_quote(threshold, quantities.migration_sqrt_price, Rounding::Up).expect("migration supply"));
 		}
 
 		/// However trades interleave, the quote the curve holds always covers
