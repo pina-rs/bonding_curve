@@ -100,11 +100,11 @@ pina-curve launch set-creator --base-mint <MINT> --new-creator <ADDRESS>
 ```sh
 pina-curve quote --base-mint <MINT> --buy 1000000000     # spend 1 SOL, fee included
 pina-curve quote --base-mint <MINT> --sell 5000000000    # sell 5,000 tokens
-pina-curve buy   --base-mint <MINT> --quote-amount 1000000000 --slippage-bps 100
-pina-curve sell  --base-mint <MINT> --base-amount 5000000000 --slippage-bps 100
+pina-curve buy   --base-mint <MINT> --quote-amount 1000000000 --minimum-base-out 4950000000
+pina-curve sell  --base-mint <MINT> --base-amount 5000000000 --minimum-quote-out 990000000
 ```
 
-Each trade is first simulated with an open limit; the `Traded` event the program emits is the quote. The CLI then sends the trade with the limit lowered by `--slippage-bps` (default 100, 1%). Missing token accounts are created in the same transaction. When the quote mint is wrapped SOL, `buy` wraps exactly `--quote-amount` lamports first, so you trade straight from your SOL balance. A buy that completes the launch only spends what it uses; any unspent wrapped SOL stays in your wrapped SOL account.
+Each trade is first simulated with an open limit; the `Traded` event is an advisory quote supplied by the selected RPC. An RPC can forge the complete simulation response, so choose your minimum output independently using a trusted price source. The required nonzero `--minimum-base-out` or `--minimum-quote-out` is the exact floor signed into the transaction, printed before signing and included in the result. Simulation cannot lower it. Missing token accounts are created in the same transaction. When the quote mint is wrapped SOL, `buy` wraps exactly `--quote-amount` lamports first, so you trade straight from your SOL balance. A buy that completes the launch only spends what it uses; any unspent wrapped SOL stays in your wrapped SOL account.
 
 ## Graduating and claiming
 

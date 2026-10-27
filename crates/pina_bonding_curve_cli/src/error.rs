@@ -53,9 +53,6 @@ pub enum CliError {
 	/// Account data did not decode as the expected type.
 	#[error("account {0} does not hold the expected data")]
 	InvalidAccountData(Pubkey),
-	/// The slippage tolerance is above 100%.
-	#[error("slippage of {0} basis points is above 10,000 (100%)")]
-	InvalidSlippage(u16),
 	/// Simulation failed, so no transaction was sent.
 	#[error("simulation failed: {error}\n{logs}")]
 	SimulationFailed {

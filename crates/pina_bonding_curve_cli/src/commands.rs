@@ -65,7 +65,6 @@ use crate::error::CliError;
 use crate::output;
 use crate::terms::Terms;
 
-const BASIS_POINTS: u128 = 10_000;
 const PARTS_PER_MILLION: f64 = 1_000_000.0;
 const CONFIG_CREATED_DISCRIMINATOR: u8 = 1;
 const TRADED_DISCRIMINATOR: u8 = 3;
@@ -90,14 +89,6 @@ pub fn run(context: &Context, command: Command) -> Result<(), CliError> {
 		Command::Graduate(args) => graduate(context, &args.base_mint),
 		Command::Claim(command) => claim(context, &command),
 	}
-}
-
-/// Smallest acceptable output after `slippage_bps` of tolerance.
-pub fn minimum_after_slippage(amount: u64, slippage_bps: u16) -> Result<u64, CliError> {
-	let remaining = BASIS_POINTS
-		.checked_sub(u128::from(slippage_bps))
-		.ok_or(CliError::InvalidSlippage(slippage_bps))?;
-	Ok(u64::try_from(u128::from(amount) * remaining / BASIS_POINTS).unwrap_or(u64::MAX))
 }
 
 fn report(context: &Context, action: &str, signature: Option<String>, details: &serde_json::Value) {
@@ -442,18 +433,12 @@ fn buy(context: &Context, args: &BuyArgs) -> Result<(), CliError> {
 	let quote = simulate_trade(context, &market, true, args.quote_amount)?;
 	let trader = context.signer();
 	let mut instructions = market.prefix(&trader, args.quote_amount);
-	instructions.push(market.buy(
-		&trader,
-		args.quote_amount,
-		minimum_after_slippage(quote.base_amount, args.slippage_bps)?,
-	)?);
+	instructions.push(market.buy(&trader, args.quote_amount, args.minimum_base_out)?);
+	eprintln!("minimum base output: {} base units", args.minimum_base_out);
 	let signature = context.send(&instructions, &[])?;
-	report(
-		context,
-		"bought",
-		signature,
-		&quote.details(&market.launch, true),
-	);
+	let mut details = quote.details(&market.launch, true);
+	details["minimum_base_out"] = json!(args.minimum_base_out);
+	report(context, "bought", signature, &details);
 	Ok(())
 }
 
@@ -462,18 +447,15 @@ fn sell(context: &Context, args: &SellArgs) -> Result<(), CliError> {
 	let quote = simulate_trade(context, &market, false, args.base_amount)?;
 	let trader = context.signer();
 	let mut instructions = market.prefix(&trader, 0);
-	instructions.push(market.sell(
-		&trader,
-		args.base_amount,
-		minimum_after_slippage(quote.quote_amount, args.slippage_bps)?,
-	)?);
-	let signature = context.send(&instructions, &[])?;
-	report(
-		context,
-		"sold",
-		signature,
-		&quote.details(&market.launch, false),
+	instructions.push(market.sell(&trader, args.base_amount, args.minimum_quote_out)?);
+	eprintln!(
+		"minimum quote output: {} quote units",
+		args.minimum_quote_out
 	);
+	let signature = context.send(&instructions, &[])?;
+	let mut details = quote.details(&market.launch, false);
+	details["minimum_quote_out"] = json!(args.minimum_quote_out);
+	report(context, "sold", signature, &details);
 	Ok(())
 }
 
@@ -697,20 +679,4 @@ fn print_config(context: &Context, config: &ConfigView) {
 
 fn print_value(context: &Context, value: &serde_json::Value) {
 	output::print(value, context.json, "");
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn slippage_limits_round_against_the_trader() {
-		assert_eq!(minimum_after_slippage(10_000, 100).expect("min"), 9_900);
-		assert_eq!(minimum_after_slippage(9_999, 100).expect("min"), 9_899);
-		assert_eq!(minimum_after_slippage(10_000, 10_000).expect("min"), 0);
-		assert!(matches!(
-			minimum_after_slippage(1, 10_001),
-			Err(CliError::InvalidSlippage(10_001))
-		));
-	}
 }
