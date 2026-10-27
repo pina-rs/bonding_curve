@@ -287,60 +287,71 @@ mod tests {
 
 	use super::*;
 
-	/// Record the actual JSON-RPC request, allowing only simulation.
-	fn recording_simulator() -> (RpcClient, thread::JoinHandle<serde_json::Value>) {
+	/// Record actual JSON-RPC requests and reject unexpected methods.
+	fn recording_rpc(
+		methods: &'static [&'static str],
+		mut result: impl FnMut(&serde_json::Value) -> serde_json::Value + Send + 'static,
+	) -> (RpcClient, thread::JoinHandle<Vec<serde_json::Value>>) {
 		let listener = TcpListener::bind("127.0.0.1:0").expect("bind RPC");
 		let address = listener.local_addr().expect("RPC address");
-		let request = thread::spawn(move || {
-			let (mut stream, _) = listener.accept().expect("RPC connection");
-			stream
-				.set_read_timeout(Some(Duration::from_secs(5)))
-				.expect("read timeout");
-			let mut reader = BufReader::new(&mut stream);
-			let mut length = None;
+		let requests = thread::spawn(move || {
+			let mut requests = Vec::new();
 
-			loop {
-				let mut line = String::new();
-				assert_ne!(reader.read_line(&mut line).expect("header"), 0);
+			for method in methods {
+				let (mut stream, _) = listener.accept().expect("RPC connection");
+				stream
+					.set_read_timeout(Some(Duration::from_secs(5)))
+					.expect("read timeout");
+				let mut reader = BufReader::new(&mut stream);
+				let mut length = None;
 
-				if line == "\r\n" {
-					break;
+				loop {
+					let mut line = String::new();
+					assert_ne!(reader.read_line(&mut line).expect("header"), 0);
+
+					if line == "\r\n" {
+						break;
+					}
+
+					if let Some(value) = line.to_ascii_lowercase().strip_prefix("content-length:") {
+						length = Some(value.trim().parse::<usize>().expect("body length"));
+					}
 				}
 
-				if let Some(value) = line.to_ascii_lowercase().strip_prefix("content-length:") {
-					length = Some(value.trim().parse::<usize>().expect("body length"));
-				}
+				let mut body = vec![0; length.expect("Content-Length")];
+				reader.read_exact(&mut body).expect("request body");
+				let request: serde_json::Value = serde_json::from_slice(&body).expect("JSON-RPC");
+				assert_eq!(request["method"], *method);
+				let response = serde_json::json!({
+					"jsonrpc": "2.0", "id": request["id"],
+					"result": result(&request)
+				})
+				.to_string();
+				write!(
+					stream,
+					"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: \
+					 {}\r\nConnection: close\r\n\r\n{response}",
+					response.len()
+				)
+				.expect("RPC response");
+				requests.push(request);
 			}
 
-			let mut body = vec![0; length.expect("Content-Length")];
-			reader.read_exact(&mut body).expect("request body");
-			let request: serde_json::Value = serde_json::from_slice(&body).expect("JSON-RPC");
-			assert_eq!(request["method"], "simulateTransaction");
-			let response = serde_json::json!({
-				"jsonrpc": "2.0", "id": request["id"],
-				"result": { "context": { "slot": 1 }, "value": {
-					"err": null, "logs": [], "unitsConsumed": 100
-				} }
-			})
-			.to_string();
-			write!(
-				stream,
-				"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: \
-				 {}\r\nConnection: close\r\n\r\n{response}",
-				response.len()
-			)
-			.expect("RPC response");
-			request
+			requests
 		});
 		let rpc = RpcClient::new_with_timeout(format!("http://{address}"), Duration::from_secs(5));
 
-		(rpc, request)
+		(rpc, requests)
 	}
 
 	#[test]
 	fn simulation_wire_payload_never_authorizes_a_transaction() {
 		for simulate_only in [false, true] {
-			let (rpc, request) = recording_simulator();
+			let (rpc, requests) = recording_rpc(&["simulateTransaction"], |_| {
+				serde_json::json!({ "context": { "slot": 1 }, "value": {
+					"err": null, "logs": [], "unitsConsumed": 100
+				} })
+			});
 			let signer = Keypair::new();
 			let extra = Keypair::new();
 			let instructions = [Instruction {
@@ -365,7 +376,11 @@ mod tests {
 				assert_eq!(context.simulate(&instructions).expect("quote").units, 100);
 			}
 
-			let request = request.join().expect("RPC request");
+			let request = requests
+				.join()
+				.expect("RPC requests")
+				.pop()
+				.expect("simulation");
 			assert_eq!(request["params"][1]["sigVerify"], false);
 			assert_eq!(request["params"][1]["replaceRecentBlockhash"], true);
 			let wire = base64::engine::general_purpose::STANDARD
@@ -397,6 +412,80 @@ mod tests {
 			.expect("sign");
 		assert_eq!(transaction.signatures.len(), 2);
 		transaction.verify().expect("valid broadcast signatures");
+	}
+
+	#[test]
+	fn send_broadcasts_valid_signatures_and_confirms_them() {
+		let signer = Keypair::new();
+		let extra = Keypair::new();
+		let instructions = [Instruction {
+			program_id: PINA_BONDING_CURVE_ID,
+			accounts: vec![AccountMeta::new_readonly(extra.pubkey(), true)],
+			data: vec![1],
+		}];
+		let mut message = Message::new(&instructions, Some(&signer.pubkey()));
+		message.recent_blockhash = [7; 32].into();
+		let mut transaction = Transaction::new_unsigned(message);
+		let (rpc, requests) = recording_rpc(
+			&[
+				"getLatestBlockhash",
+				"sendTransaction",
+				"getSignatureStatuses",
+			],
+			move |request| {
+				match request["method"].as_str().expect("method") {
+					"getLatestBlockhash" => {
+						serde_json::json!({
+							"context": { "slot": 1 }, "value": {
+								"blockhash": transaction.message.recent_blockhash.to_string(),
+								"lastValidBlockHeight": 100
+							}
+						})
+					}
+					"sendTransaction" => {
+						assert_eq!(request["params"][1]["encoding"], "base64");
+						let wire = base64::engine::general_purpose::STANDARD
+							.decode(request["params"][0].as_str().expect("base64 transaction"))
+							.expect("decode broadcast");
+						assert_eq!(wire[0], 2);
+						assert_eq!(&wire[129..], transaction.message.serialize());
+
+						for (signature, bytes) in transaction
+							.signatures
+							.iter_mut()
+							.zip(wire[1..129].chunks_exact(64))
+						{
+							*signature = bytes.try_into().expect("signature");
+						}
+
+						transaction.verify().expect("valid broadcast signatures");
+						serde_json::json!(transaction.signatures[0].to_string())
+					}
+					"getSignatureStatuses" => {
+						assert_eq!(
+							request["params"][0][0],
+							transaction.signatures[0].to_string()
+						);
+						serde_json::json!({ "context": { "slot": 1 }, "value": [{
+						"slot": 1, "confirmations": null, "err": null,
+						"status": { "Ok": null }, "confirmationStatus": "finalized"
+					}] })
+					}
+					_ => unreachable!("recording RPC rejects unexpected methods"),
+				}
+			},
+		);
+		let context = Context {
+			rpc,
+			signer,
+			json: true,
+			simulate_only: false,
+		};
+		let signature = context
+			.send(&instructions, &[&extra])
+			.expect("send and confirm");
+		assert!(signature.is_some());
+		assert_eq!(requests.join().expect("RPC requests").len(), 3);
 	}
 
 	#[test]
