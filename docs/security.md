@@ -74,6 +74,8 @@ The program has no admin role and no pause switch. The upgrade authority is the 
 
 The native CLI's Solana RPC dependencies bring in `zstd 0.13.3` and `zstd-safe 7.3.0`. The on-chain program and generated clients do not link this RPC stack. The SDK requires `zstd ^0.13.3`, which in turn requires `zstd-safe ^7.1.0`; the patched `zstd 0.14.3` and `zstd-safe 8.2.0` releases are outside those constraints. `zstd-sys` is updated to `2.1.2`, fixing [RUSTSEC-2026-0410](https://rustsec.org/advisories/RUSTSEC-2026-0410.html) without an exception.
 
+The separate Surfpool test workspace also locks `zstd-sys 2.1.2`, so its `cargo test --locked` run uses the same patched native library.
+
 The three exceptions in `deny.toml` were reviewed against the locked graph on 2026-10-27:
 
 | Advisory                                                                   | Why the affected path is unreachable                                                                                                                                                                                                                                                        |
