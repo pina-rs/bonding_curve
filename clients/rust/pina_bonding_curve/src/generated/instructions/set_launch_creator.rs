@@ -18,6 +18,9 @@ pub struct SetLaunchCreator {
 	pub creator: solana_pubkey::Pubkey,
 	/// The launch.
 	pub launch: solana_pubkey::Pubkey,
+	/// The new creator, who must accept the handover by signing. The appended
+	/// wire slot is optional; processing rejects an omitted acceptance.
+	pub new_creator_signer: Option<solana_pubkey::Pubkey>,
 }
 
 impl SetLaunchCreator {
@@ -25,6 +28,7 @@ impl SetLaunchCreator {
 		Self {
 			creator,
 			launch,
+			new_creator_signer: None,
 		}
 	}
 
@@ -38,9 +42,15 @@ impl SetLaunchCreator {
 		data: SetLaunchCreatorInstructionData,
 		remaining_accounts: &[solana_instruction::AccountMeta],
 	) -> solana_instruction::Instruction {
-		let mut accounts = Vec::with_capacity(2 + remaining_accounts.len());
+		let mut accounts = Vec::with_capacity(3 + remaining_accounts.len());
 		accounts.push(solana_instruction::AccountMeta::new_readonly(self.creator, true));
 		accounts.push(solana_instruction::AccountMeta::new(self.launch, false));
+		if let Some(new_creator_signer) = self.new_creator_signer {
+			accounts.push(solana_instruction::AccountMeta::new_readonly(new_creator_signer, true));
+		}
+		else {
+			accounts.push(solana_instruction::AccountMeta::new_readonly(crate::PINA_BONDING_CURVE_ID, false));
+		}
 		accounts.extend_from_slice(remaining_accounts);
 		solana_instruction::Instruction {
 			program_id: crate::PINA_BONDING_CURVE_ID,

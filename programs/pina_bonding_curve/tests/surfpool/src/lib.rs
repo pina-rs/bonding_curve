@@ -82,6 +82,7 @@ mod code {
 	pub const MISSING_LP_ACCOUNT: u32 = 21;
 	pub const DEFAULT_CREATOR: u32 = 22;
 	pub const LAUNCH_AS_CREATOR: u32 = 24;
+	pub const INVALID_LP_RECIPIENT: u32 = 25;
 	pub const INVALID_MINT_ORDER: u32 = 26;
 }
 
@@ -1181,6 +1182,178 @@ fn graduation_merges_lp_shares_when_the_creator_is_the_partner() {
 
 #[test]
 #[ignore = "run with `devenv shell test:surfpool`"]
+fn creator_handover_requires_acceptance_and_preserves_graduation() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let config = create_config(
+			&h,
+			&amm,
+			Terms {
+				creator_lp_share: 100_000,
+				partner_lp_share: 200_000,
+				..Terms::default()
+			},
+		);
+		let creator = h.funded_keypair().expect("creator");
+		let mint = compatible_base_mint(&config.quote_mint);
+		h.create_mint_with_authority(&mint, &TOKEN_2022_PROGRAM, 6, &creator.pubkey(), &[])
+			.expect("mint");
+		let base_mint = mint.pubkey();
+		h.send(
+			&[create_launch_instruction(
+				&h,
+				&config,
+				&creator.pubkey(),
+				&base_mint,
+				0,
+			)],
+			&[&creator],
+		)
+		.expect("launch");
+		let launch_address = Launch::find_pda(&base_mint).0;
+		let mut launch = LaunchFixture {
+			creator,
+			base_mint,
+			launch: launch_address,
+			base_vault: vault(&launch_address, &base_mint),
+			quote_vault: vault(&launch_address, &config.quote_mint),
+		};
+		let addresses = pool_addresses(&config, &launch);
+		let handover = |recipient: Pubkey| {
+			let mut accounts = SetLaunchCreator::new(launch.creator.pubkey(), launch.launch);
+			accounts.new_creator_signer = Some(recipient);
+			accounts.instruction(
+				SetLaunchCreatorInstructionData::new(|data| data.new_creator = recipient)
+					.expect("handover data"),
+			)
+		};
+		let mut omitted_acceptance = handover(Pubkey::new_unique());
+		omitted_acceptance.accounts.pop();
+		let (error, _) = h
+			.simulate(&[omitted_acceptance], &[&launch.creator])
+			.expect_err("handover needs acceptance");
+		assert!(matches!(
+			error,
+			Some(pina_test::TransactionError::InstructionError(
+				_,
+				pina_test::InstructionError::MissingRequiredSignature
+			))
+		));
+
+		for recipient in [
+			launch.base_vault,
+			launch.quote_vault,
+			addresses.pool,
+			addresses.lp_mint,
+			addresses.vault_0,
+			addresses.vault_1,
+			ata(&launch.launch, &addresses.lp_mint, &TOKEN_PROGRAM),
+		] {
+			let mut instruction = handover(recipient);
+			// Remove the client signer meta to exercise the program's guard.
+			instruction.accounts[2].is_signer = false;
+			let (error, _) = h
+				.simulate(&[instruction], &[&launch.creator])
+				.expect_err("recipient must accept");
+			assert!(matches!(
+				error,
+				Some(pina_test::TransactionError::InstructionError(
+					_,
+					pina_test::InstructionError::MissingRequiredSignature
+				))
+			));
+		}
+
+		h.expect_custom_error(
+			&[handover(base_mint)],
+			&[&launch.creator, &mint],
+			code::INVALID_LP_RECIPIENT,
+		);
+		let successor = h.funded_keypair().expect("successor");
+		h.send(
+			&[handover(successor.pubkey())],
+			&[&launch.creator, &successor],
+		)
+		.expect("accepted handover");
+		launch.creator = successor;
+		past_fee_decay(&h);
+		complete(&h, &config, &launch);
+		h.send(
+			&[graduate_instruction(
+				&h,
+				&config,
+				&launch,
+				LpRecipients::CreatorAndPartner,
+			)],
+			&[],
+		)
+		.expect("graduate after handover");
+		assert!(
+			h.token_balance(&ata(
+				&launch.creator.pubkey(),
+				&addresses.lp_mint,
+				&TOKEN_PROGRAM
+			)) > 0
+		);
+		h.stop().expect("stop");
+	});
+}
+
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
+fn base_mint_cannot_be_an_immutable_partner_lp_recipient() {
+	pina_test::run(async {
+		let h = Harness::start().await.expect("start");
+		let amm = setup_amm(&h);
+		let creator = h.funded_keypair().expect("creator");
+		let mint = Keypair::new();
+		h.create_mint_with_authority(&mint, &TOKEN_2022_PROGRAM, 6, &creator.pubkey(), &[])
+			.expect("mint");
+		let quote_mint = h.create_mint(&TOKEN_PROGRAM, 9, &[]).expect("quote");
+		h.send(
+			&[create_config_instruction(
+				&h,
+				&mint,
+				0,
+				&quote_mint,
+				&amm.tier,
+				Terms {
+					partner_lp_share: 100_000,
+					..Terms::default()
+				},
+			)],
+			&[&mint],
+		)
+		.expect("configuration with mint authority identity");
+		let config = Config {
+			address: LaunchConfig::find_pda(&mint.pubkey(), 0).0,
+			quote_mint,
+			amm_tier: amm.tier,
+			partner: mint,
+		};
+		h.expect_custom_error(
+			&[create_launch_instruction(
+				&h,
+				&config,
+				&creator.pubkey(),
+				&config.partner.pubkey(),
+				0,
+			)],
+			&[&creator],
+			code::INVALID_LP_RECIPIENT,
+		);
+		assert_eq!(h.mint_supply(&config.partner.pubkey()), 0);
+		assert_eq!(
+			h.mint_authority(&config.partner.pubkey()),
+			Some(creator.pubkey())
+		);
+		h.stop().expect("stop");
+	});
+}
+
+#[test]
+#[ignore = "run with `devenv shell test:surfpool`"]
 fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 	pina_test::run(async {
 		let h = Harness::start().await.expect("start");
@@ -1306,23 +1479,30 @@ fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 		// Creator rights move with `SetLaunchCreator`.
 		let successor = h.funded_keypair().expect("successor");
 		let set_creator = |signer: &Pubkey| {
-			SetLaunchCreator::new(*signer, launch.launch).instruction(
+			let mut accounts = SetLaunchCreator::new(*signer, launch.launch);
+			accounts.new_creator_signer = Some(successor.pubkey());
+			accounts.instruction(
 				SetLaunchCreatorInstructionData::new(|data| data.new_creator = successor.pubkey())
 					.expect("data"),
 			)
 		};
 		h.expect_custom_error(
 			&[set_creator(&buyer.pubkey())],
-			&[&buyer],
+			&[&buyer, &successor],
 			code::UNAUTHORIZED,
 		);
-		h.send(&[set_creator(&launch.creator.pubkey())], &[&launch.creator])
-			.expect("set creator");
+		h.send(
+			&[set_creator(&launch.creator.pubkey())],
+			&[&launch.creator, &successor],
+		)
+		.expect("set creator");
 		assert_eq!(launch_state(&h, &launch.launch).creator, successor.pubkey());
 
 		// The default address can never sign, so it may not hold creator
 		// rights: fees and the vested allocation would be unclaimable forever.
-		let set_default = SetLaunchCreator::new(successor.pubkey(), launch.launch).instruction(
+		let mut successor_accounts = SetLaunchCreator::new(successor.pubkey(), launch.launch);
+		successor_accounts.new_creator_signer = Some(successor.pubkey());
+		let set_default = successor_accounts.instruction(
 			SetLaunchCreatorInstructionData::new(|data| data.new_creator = Pubkey::default())
 				.expect("data"),
 		);
@@ -1330,7 +1510,7 @@ fn fees_and_vested_allocations_are_claimed_only_by_their_owners() {
 
 		// Nor may the launch itself: it can never sign, and its LP payout
 		// would alias the launch's own LP account, so graduation would fail.
-		let set_launch = SetLaunchCreator::new(successor.pubkey(), launch.launch).instruction(
+		let set_launch = successor_accounts.instruction(
 			SetLaunchCreatorInstructionData::new(|data| data.new_creator = launch.launch)
 				.expect("data"),
 		);

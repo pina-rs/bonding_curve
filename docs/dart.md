@@ -484,7 +484,7 @@ if (claimableAllocation(now) > BigInt.zero) {
 }
 ```
 
-`getSetLaunchCreatorInstruction` hands everything the creator receives from then on (unclaimed and future fees, the rest of the allocation, and graduation LP) to another address, such as a multisig.
+`getSetLaunchCreatorInstruction` hands everything the creator receives from then on (unclaimed and future fees, the rest of the allocation, and graduation LP) to another address, such as a multisig. Supply `newCreatorSigner` for the new creator and sign with both creators; it must match `newCreator`.
 
 ## Events
 

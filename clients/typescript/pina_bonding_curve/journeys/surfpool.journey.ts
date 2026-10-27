@@ -439,6 +439,7 @@ async function main(): Promise<void> {
 				creator,
 				launch,
 				newCreator: successor.address,
+				newCreatorSigner: successor,
 			}),
 		],
 	);

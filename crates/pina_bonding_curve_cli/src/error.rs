@@ -73,4 +73,7 @@ pub enum CliError {
 	/// The selected or generated mint does not have the required base role.
 	#[error("base mint must sort after the quote mint; provide a compatible --base-mint")]
 	InvalidMintOrder,
+	/// The handover acceptance key does not belong to the selected recipient.
+	#[error("new creator keypair does not match --new-creator")]
+	NewCreatorMismatch,
 }

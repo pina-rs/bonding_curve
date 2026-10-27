@@ -335,16 +335,16 @@ fn every_instruction_runs_in_one_journey() {
 		assert_eq!(h.token_balance(&creator_base), crate::CREATOR_ALLOCATION);
 
 		let successor = h.funded_keypair().expect("successor");
+		let mut handover = SetLaunchCreator::new(launch.creator.pubkey(), launch.launch);
+		handover.new_creator_signer = Some(successor.pubkey());
 		h.send(
-			&[
-				SetLaunchCreator::new(launch.creator.pubkey(), launch.launch).instruction(
-					SetLaunchCreatorInstructionData::new(|data| {
-						data.new_creator = successor.pubkey();
-					})
-					.expect("data"),
-				),
-			],
-			&[&launch.creator],
+			&[handover.instruction(
+				SetLaunchCreatorInstructionData::new(|data| {
+					data.new_creator = successor.pubkey();
+				})
+				.expect("data"),
+			)],
+			&[&launch.creator, &successor],
 		)
 		.expect("set launch creator");
 		assert_eq!(launch_state(&h, &launch.launch).creator, successor.pubkey());

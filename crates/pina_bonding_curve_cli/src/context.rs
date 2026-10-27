@@ -213,7 +213,7 @@ fn is_loopback_authority(rest: &str) -> bool {
 }
 
 /// Read a Solana CLI keypair file: a JSON array of 64 bytes.
-fn load_keypair(path: &str) -> Result<Keypair, CliError> {
+pub fn load_keypair(path: &str) -> Result<Keypair, CliError> {
 	let expanded = match path.strip_prefix("~/") {
 		Some(rest) => {
 			let home = std::env::var("HOME").map_err(|_| {

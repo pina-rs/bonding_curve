@@ -90,7 +90,7 @@ The signer is the creator. A mint you bring must be empty, have no freeze author
 
 ```sh
 pina-curve launch show --base-mint <MINT>
-pina-curve launch set-creator --base-mint <MINT> --new-creator <ADDRESS>
+pina-curve launch set-creator --base-mint <MINT> --new-creator <ADDRESS> --new-creator-keypair <KEYPAIR_FILE>
 ```
 
 `launch show` prints the status, the current price, `progress` toward graduation (`quote_reserve / migration_quote_threshold`), unsold base, unclaimed fees, and the pool once graduated.

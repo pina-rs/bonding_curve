@@ -102,6 +102,7 @@ Instruction getSetLaunchCreatorInstruction({
   required Address programAddress,
   required Address creator,
   required Address launch,
+  Address? newCreatorSigner,
   required Address newCreator,
 }) {
   final instructionData = SetLaunchCreatorInstructionData(
@@ -113,6 +114,10 @@ Instruction getSetLaunchCreatorInstruction({
     accounts: [
       AccountMeta(address: creator, role: AccountRole.readonlySigner),
       AccountMeta(address: launch, role: AccountRole.writable),
+      if (newCreatorSigner != null)
+        AccountMeta(address: newCreatorSigner, role: AccountRole.readonlySigner)
+      else
+        AccountMeta(address: programAddress, role: AccountRole.readonly),
     ],
     data: getSetLaunchCreatorInstructionDataEncoder().encode(instructionData),
   );
