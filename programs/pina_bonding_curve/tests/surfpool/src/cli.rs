@@ -312,6 +312,8 @@ fn the_cli_wraps_sol_for_launches_that_raise_sol() {
 				&base_mint,
 				"--quote-amount",
 				"100000000",
+				"--minimum-base-out",
+				"1",
 			],
 		);
 		let base: Pubkey = base_mint.parse().expect("base mint");
