@@ -205,33 +205,33 @@ In `Traded`, `quote_amount` is what the buyer paid (fee included) or what the se
 
 ## Errors
 
-| Code | Name                             | Meaning                                                                     |
-| ---- | -------------------------------- | --------------------------------------------------------------------------- |
-| 0    | `InvalidCurve`                   | Segments empty, not increasing, out of range, or without liquidity          |
-| 1    | `InvalidFeeRates`                | A rate is out of range, or the decay does not match the start and end fees  |
-| 2    | `InvalidSupply`                  | The total supply cannot cover sale, pool seed, and allocation               |
-| 3    | `InvalidMigrationThreshold`      | The threshold is zero, too small, or beyond the curve                       |
-| 4    | `InvalidShares`                  | A share is above 100%, or the two LP shares exceed 100% together            |
-| 5    | `InvalidVesting`                 | Cliff plus duration does not fit a timestamp                                |
-| 6    | `InvalidAmmConfig`               | The tier is not a Pina AMM tier restricted to this program                  |
-| 7    | `UnsupportedMint`                | Token program or Token-2022 extension not supported                         |
-| 8    | `InvalidBaseMint`                | The base mint is not new, has a freeze authority, or has wrong decimals     |
-| 9    | `Unauthorized`                   | The signer is not the required authority                                    |
-| 10   | `AccountMismatch`                | A vault, mint, configuration, or pool account does not belong to the launch |
-| 11   | `NotTrading`                     | The launch has completed or graduated                                       |
-| 12   | `NotActive`                      | Trading has not opened yet                                                  |
-| 13   | `NotCompleted`                   | The launch cannot graduate yet                                              |
-| 14   | `SlippageExceeded`               | The result is worse than the caller's limit                                 |
-| 15   | `ZeroAmount`                     | An amount is zero or the trade rounds to nothing                            |
-| 16   | `InsufficientLiquidity`          | The curve cannot absorb a sale this large                                   |
-| 17   | `MathOverflow`                   | A value overflowed its type                                                 |
-| 18   | `InsufficientMigrationLiquidity` | Graduation would seed too little liquidity                                  |
-| 19   | `InvalidPoolCreatorMode`         | The mode is not 0 or 1                                                      |
-| 20   | `NothingToClaim`                 | Nothing has accrued or vested                                               |
-| 21   | `MissingLpAccount`               | An LP recipient is required because its share is above zero                 |
-| 22   | `DefaultCreator`                 | The new creator is the default address, which can never sign                |
-| 23   | `MigrationPriceMismatch`         | The launch price no longer matches the configuration's migration price      |
-| 24   | `LaunchAsCreator`                | The new creator is the launch itself, which can never sign or receive LP    |
-| 26   | `InvalidMintOrder`               | The base mint does not sort after the quote mint by address bytes           |
+| Code | Name                             | Meaning                                                                      |
+| ---- | -------------------------------- | ---------------------------------------------------------------------------- |
+| 0    | `InvalidCurve`                   | Segments empty, not increasing, out of range, or without liquidity           |
+| 1    | `InvalidFeeRates`                | A rate is out of range, or the decay does not match the start and end fees   |
+| 2    | `InvalidSupply`                  | The total supply cannot cover sale, pool seed, and allocation                |
+| 3    | `InvalidMigrationThreshold`      | The threshold is zero, inexact at a representable price, or beyond the curve |
+| 4    | `InvalidShares`                  | A share is above 100%, or the two LP shares exceed 100% together             |
+| 5    | `InvalidVesting`                 | Cliff plus duration does not fit a timestamp                                 |
+| 6    | `InvalidAmmConfig`               | The tier is not a Pina AMM tier restricted to this program                   |
+| 7    | `UnsupportedMint`                | Token program or Token-2022 extension not supported                          |
+| 8    | `InvalidBaseMint`                | The base mint is not new, has a freeze authority, or has wrong decimals      |
+| 9    | `Unauthorized`                   | The signer is not the required authority                                     |
+| 10   | `AccountMismatch`                | A vault, mint, configuration, or pool account does not belong to the launch  |
+| 11   | `NotTrading`                     | The launch has completed or graduated                                        |
+| 12   | `NotActive`                      | Trading has not opened yet                                                   |
+| 13   | `NotCompleted`                   | The launch cannot graduate yet                                               |
+| 14   | `SlippageExceeded`               | The result is worse than the caller's limit                                  |
+| 15   | `ZeroAmount`                     | An amount is zero or the trade rounds to nothing                             |
+| 16   | `InsufficientLiquidity`          | The curve cannot absorb a sale this large                                    |
+| 17   | `MathOverflow`                   | A value overflowed its type                                                  |
+| 18   | `InsufficientMigrationLiquidity` | Graduation would seed too little liquidity                                   |
+| 19   | `InvalidPoolCreatorMode`         | The mode is not 0 or 1                                                       |
+| 20   | `NothingToClaim`                 | Nothing has accrued or vested                                                |
+| 21   | `MissingLpAccount`               | An LP recipient is required because its share is above zero                  |
+| 22   | `DefaultCreator`                 | The new creator is the default address, which can never sign                 |
+| 23   | `MigrationPriceMismatch`         | The launch price no longer matches the configuration's migration price       |
+| 24   | `LaunchAsCreator`                | The new creator is the launch itself, which can never sign or receive LP     |
+| 26   | `InvalidMintOrder`               | The base mint does not sort after the quote mint by address bytes            |
 
 Pina's own framework errors use codes `0xFFFF0000` and above, for example `DuplicateMutableAccount` when the same writable account appears twice.

@@ -354,19 +354,19 @@ pub struct Quantities {
 	pub migration_supply: u64,
 }
 
-/// Walk the curve until `threshold` quote has been raised.
+/// Walk the curve until exactly `threshold` quote has been raised.
 ///
 /// # Errors
 ///
 /// [`CurveError::InvalidMigrationThreshold`] when the threshold is zero, too
-/// small to move the price, or beyond the curve's last segment.
+/// small to move the price, not exactly representable at a Q64.64 price, or
+/// beyond the curve's last segment.
 pub fn derive_quantities(curve: &Curve, threshold: u64) -> Result<Quantities, ProgramError> {
 	if threshold == 0 {
 		return Err(CurveError::InvalidMigrationThreshold.into());
 	}
 	let mut remaining = threshold;
 	let mut sale_supply = 0u64;
-	let mut migration_quote = 0u64;
 	for index in 0..curve.len() {
 		let segment = curve.segment(index);
 		let full = quote_delta(
@@ -391,21 +391,26 @@ pub fn derive_quantities(curve: &Curve, threshold: u64) -> Result<Quantities, Pr
 				Rounding::Up,
 			)?)
 			.ok_or(CurveError::MathOverflow)?;
-		migration_quote = migration_quote
-			.checked_add(quote_delta(
+		remaining = remaining
+			.checked_sub(quote_delta(
 				segment.lower,
 				upper,
 				segment.liquidity,
 				Rounding::Up,
 			)?)
 			.ok_or(CurveError::MathOverflow)?;
-		remaining = remaining.saturating_sub(full);
 		if upper < segment.upper || remaining == 0 {
+			// A price tick can cost more than one quote unit. Flooring the price
+			// must not silently reduce the amount this configuration promises.
+			if remaining != 0 {
+				return Err(CurveError::InvalidMigrationThreshold.into());
+			}
+
 			return Ok(Quantities {
 				migration_sqrt_price: upper,
 				sale_supply,
-				migration_quote,
-				migration_supply: base_for_quote(migration_quote, upper, Rounding::Up)?,
+				migration_quote: threshold,
+				migration_supply: base_for_quote(threshold, upper, Rounding::Up)?,
 			});
 		}
 	}
@@ -571,6 +576,44 @@ mod tests {
 	}
 
 	#[test]
+	fn rejects_a_threshold_between_large_price_ticks() {
+		let mut uppers = [0; MAX_SEGMENTS];
+		let mut liquidities = [0; MAX_SEGMENTS];
+		uppers[0] = Q64 + 16;
+		liquidities[0] = 750_000_000 * Q64;
+		let curve = Curve::new(Q64, uppers, liquidities, 1).expect("curve");
+		assert_eq!(
+			derive_quantities(&curve, 1_000_000_000),
+			Err(CurveError::InvalidMigrationThreshold.into())
+		);
+		let quantities = derive_quantities(&curve, 1_500_000_000).expect("exact threshold");
+		assert_eq!(quantities.migration_quote, 1_500_000_000);
+		assert_eq!(quantities.migration_sqrt_price, Q64 + 2);
+	}
+
+	#[test]
+	fn checks_the_remaining_threshold_after_crossing_a_segment() {
+		let mut uppers = [0; MAX_SEGMENTS];
+		let mut liquidities = [0; MAX_SEGMENTS];
+		uppers[0] = Q64 + 1;
+		uppers[1] = Q64 + 17;
+		liquidities[0] = 500_000_000 * Q64;
+		liquidities[1] = 750_000_000 * Q64;
+		let curve = Curve::new(Q64, uppers, liquidities, 2).expect("curve");
+		assert_eq!(
+			derive_quantities(&curve, 1_500_000_000),
+			Err(CurveError::InvalidMigrationThreshold.into())
+		);
+		let quantities = derive_quantities(&curve, 2_000_000_000).expect("exact threshold");
+		assert_eq!(quantities.migration_quote, 2_000_000_000);
+		assert_eq!(quantities.migration_sqrt_price, Q64 + 3);
+		let result = buy(&curve, Q64, u64::MAX / 2, quantities.migration_sqrt_price)
+			.expect("completing buy");
+		assert!(result.completed);
+		assert_eq!(result.quote_used, 2_000_000_000);
+	}
+
+	#[test]
 	fn selling_more_than_was_bought_fails() {
 		let curve = launch_curve();
 		let bought = buy(&curve, curve.start(), 1_000_000_000, u128::MAX).expect("buy");
@@ -619,6 +662,28 @@ mod tests {
 	proptest! {
 		#![proptest_config(ProptestConfig::with_cases(1_024))]
 
+		/// Every accepted configuration raises exactly its requested threshold,
+		/// even when one representable price tick spans many quote units.
+		#[test]
+		fn accepted_thresholds_are_reached_exactly(
+			liquidity in prop_oneof![1u128..1_000_000_000_000_000, Q64..(1_000_000_000 * Q64)],
+			ticks in 1u128..32,
+		) {
+			let mut uppers = [0; MAX_SEGMENTS];
+			let mut liquidities = [0; MAX_SEGMENTS];
+			uppers[0] = Q64 + 64;
+			liquidities[0] = liquidity;
+			let curve = Curve::new(Q64, uppers, liquidities, 1).expect("curve");
+
+			let threshold = quote_delta(Q64, Q64 + ticks, liquidity, Rounding::Up).expect("representable threshold");
+			let quantities = derive_quantities(&curve, threshold).expect("accept representable threshold");
+			let result = buy(&curve, Q64, u64::MAX / 2, quantities.migration_sqrt_price).expect("completing buy");
+			prop_assert!(result.completed);
+			prop_assert_eq!(quantities.migration_quote, threshold);
+			prop_assert_eq!(result.quote_used, threshold);
+			prop_assert_eq!(quantities.migration_supply, base_for_quote(threshold, quantities.migration_sqrt_price, Rounding::Up).expect("migration supply"));
+		}
+
 		/// However trades interleave, the quote the curve holds always covers
 		/// the integral of the curve up to its current price, and no buyer
 		/// receives base the curve has not priced.
@@ -649,6 +714,10 @@ mod tests {
 				prop_assert!(price <= cap);
 				prop_assert!(reserve >= quote_floor(&curve, price).expect("floor"));
 				prop_assert!(circulating <= quantities.sale_supply);
+
+				if price == cap {
+					prop_assert!(reserve >= 85_000_000_000);
+				}
 			}
 		}
 

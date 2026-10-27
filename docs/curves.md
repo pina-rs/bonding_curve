@@ -77,6 +77,8 @@ The result, checked by the `reserves_always_cover_the_curve` property test, is t
 | `sale_supply`          | Base sold along the curve from the start to the migration price (rounded up)  |
 | `migration_supply`     | Base needed to seed the AMM pool with the raised quote at the migration price |
 
+The threshold must be exactly representable by a Q64.64 migration price, with each segment's quote cost rounded up. Configurations whose price ticks skip the requested amount are rejected with `InvalidMigrationThreshold`; the program never lowers the threshold to make it fit.
+
 The configuration is rejected unless:
 
 - the threshold is above zero and reachable within the curve's segments (`InvalidMigrationThreshold`);
