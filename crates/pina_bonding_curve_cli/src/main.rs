@@ -4,8 +4,8 @@
 //! crate. It derives every PDA, vault, pool address, and associated token
 //! account, so commands take the values a person actually chooses: a terms
 //! file, a launch's mint, and amounts. Trades are quoted by simulating the
-//! instruction and reading the event the program emits, then sent with a
-//! slippage limit derived from that quote.
+//! instruction and reading the event the program emits. Sending a trade
+//! requires an explicit minimum output chosen independently of the RPC.
 //!
 //! Run `pina-curve --help` for the command reference, or read
 //! `docs/cli.md` in the repository.

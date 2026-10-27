@@ -177,6 +177,7 @@ fn the_cli_runs_a_launch_from_configuration_to_graduation() {
 			&["quote", "--base-mint", &base_mint, "--buy", "1000000000"],
 		);
 		let quoted_base = number(&quoted["details"], "base_amount");
+		let minimum_base = quoted_base.to_string();
 		assert_eq!(number(&quoted["details"], "fee"), 10_000_000);
 		run(
 			&h,
@@ -187,6 +188,8 @@ fn the_cli_runs_a_launch_from_configuration_to_graduation() {
 				&base_mint,
 				"--quote-amount",
 				"1000000000",
+				"--minimum-base-out",
+				&minimum_base,
 			],
 		);
 		let creator_base = ata(&creator.pubkey(), &base, &TOKEN_2022_PROGRAM);
@@ -196,7 +199,15 @@ fn the_cli_runs_a_launch_from_configuration_to_graduation() {
 		let sold = run(
 			&h,
 			&creator,
-			&["sell", "--base-mint", &base_mint, "--base-amount", &half],
+			&[
+				"sell",
+				"--base-mint",
+				&base_mint,
+				"--base-amount",
+				&half,
+				"--minimum-quote-out",
+				"1",
+			],
 		);
 		assert!(number(&sold["details"], "quote_amount") > 0);
 		let trading = run(&h, &creator, &["launch", "show", "--base-mint", &base_mint]);
@@ -212,6 +223,8 @@ fn the_cli_runs_a_launch_from_configuration_to_graduation() {
 				&base_mint,
 				"--quote-amount",
 				"500000000000",
+				"--minimum-base-out",
+				"1",
 			],
 		);
 		let graduated = run(&h, &partner, &["graduate", "--base-mint", &base_mint]);

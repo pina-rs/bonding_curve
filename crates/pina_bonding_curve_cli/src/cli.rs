@@ -235,9 +235,10 @@ pub struct BuyArgs {
 	/// launch spends only what it uses.
 	#[arg(long)]
 	pub quote_amount: u64,
-	/// Slippage tolerance in basis points (`100` is 1%).
-	#[arg(long, default_value_t = 100)]
-	pub slippage_bps: u16,
+	/// Minimum base units to receive. Choose this independently of the RPC's
+	/// advisory quote; simulation cannot lower this signed limit.
+	#[arg(long, value_parser = clap::value_parser!(u64).range(1..))]
+	pub minimum_base_out: u64,
 }
 
 /// `pina-curve sell`
@@ -249,9 +250,10 @@ pub struct SellArgs {
 	/// Base units to sell.
 	#[arg(long)]
 	pub base_amount: u64,
-	/// Slippage tolerance in basis points (`100` is 1%).
-	#[arg(long, default_value_t = 100)]
-	pub slippage_bps: u16,
+	/// Minimum quote units to receive. Choose this independently of the RPC's
+	/// advisory quote; simulation cannot lower this signed limit.
+	#[arg(long, value_parser = clap::value_parser!(u64).range(1..))]
+	pub minimum_quote_out: u64,
 }
 
 /// `pina-curve claim ...`
@@ -277,6 +279,21 @@ mod tests {
 	#[test]
 	fn command_definition_is_consistent() {
 		Cli::command().debug_assert();
+	}
+
+	#[test]
+	fn trades_require_an_explicit_nonzero_minimum() {
+		let mint = Pubkey::new_unique().to_string();
+
+		for (side, input, minimum) in [
+			("buy", "--quote-amount", "--minimum-base-out"),
+			("sell", "--base-amount", "--minimum-quote-out"),
+		] {
+			let base = ["pina-curve", side, "--base-mint", &mint, input, "10"];
+			assert!(Cli::try_parse_from(base).is_err());
+			assert!(Cli::try_parse_from([&base[..], &[minimum, "0"]].concat()).is_err());
+			assert!(Cli::try_parse_from([&base[..], &[minimum, "1"]].concat()).is_ok());
+		}
 	}
 
 	#[test]
