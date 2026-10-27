@@ -8,7 +8,7 @@ cargo install pina_bonding_curve_cli
 pina-curve design segment --from-price 0.000028 --to-price 0.000497 --quote 85000000000
 pina-curve -u mainnet --simulate config create --index 0 --quote-mint <MINT> --amm-config <TIER> --terms terms.json
 pina-curve -u mainnet launch create --config <CONFIG>
-pina-curve -u mainnet buy --base-mint <MINT> --quote-amount 1000000000 --slippage-bps 100
+pina-curve -u mainnet buy --base-mint <MINT> --quote-amount 1000000000 --minimum-base-out <MINIMUM_BASE_UNITS>
 pina-curve -u mainnet graduate --base-mint <MINT>
 ```
 
