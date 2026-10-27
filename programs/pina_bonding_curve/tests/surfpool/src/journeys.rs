@@ -56,7 +56,7 @@ use crate::vault;
 /// compares programs, not addresses.
 const PARTNER_SEED: [u8; 32] = *b"pina curve journey partner 00010";
 const QUOTE_MINT_SEED: [u8; 32] = *b"pina curve journey quote 0000001";
-const BASE_MINT_SEED: [u8; 32] = *b"pina curve journey base 00000004";
+const BASE_MINT_SEED: [u8; 32] = *b"pina curve journey base 00000001";
 /// The tier index the journeys create their configuration under.
 const JOURNEY_TIER: u16 = 101;
 

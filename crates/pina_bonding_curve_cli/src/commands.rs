@@ -181,7 +181,7 @@ fn create_launch(context: &Context, args: &CreateLaunchArgs) -> Result<(), CliEr
 		Some(
 			(0..4096)
 				.map(|_| Keypair::new())
-				.find(|mint| mint.pubkey() < config.quote_mint)
+				.find(|mint| mint.pubkey() > config.quote_mint)
 				.ok_or(CliError::InvalidMintOrder)?,
 		)
 	} else {
@@ -211,7 +211,7 @@ fn create_launch(context: &Context, args: &CreateLaunchArgs) -> Result<(), CliEr
 			(mint.pubkey(), program)
 		}
 		(None, Some(mint)) => {
-			if mint >= config.quote_mint {
+			if mint <= config.quote_mint {
 				return Err(CliError::InvalidMintOrder);
 			}
 

@@ -113,9 +113,9 @@ pub enum PinaBondingCurveError {
 	/// 24 - The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.
 	#[error("The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.")]
 	LaunchAsCreator = 0x18,
-	/// The launch base mint must sort before its quote mint to reserve a unique graduation pool.
-	/// 26 - The launch base mint must sort before its quote mint to reserve a unique graduation pool.
-	#[error("The launch base mint must sort before its quote mint to reserve a unique graduation pool.")]
+	/// The launch base mint must sort after its quote mint to reserve a unique graduation pool.
+	/// 26 - The launch base mint must sort after its quote mint to reserve a unique graduation pool.
+	#[error("The launch base mint must sort after its quote mint to reserve a unique graduation pool.")]
 	InvalidMintOrder = 0x1A,
 }
 

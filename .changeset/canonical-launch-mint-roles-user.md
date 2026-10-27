@@ -6,4 +6,4 @@ bonding_curve: user
 
 ## User impact
 
-Two launches cannot claim the same future market by swapping their base and quote tokens. New launches use the smaller mint address as the base token; the CLI chooses a compatible address automatically. Existing mints must follow that ordering.
+Two launches cannot claim the same future market by swapping their base and quote tokens. New launches use the larger mint address as the base token; the CLI chooses a compatible address automatically. Existing mints must follow that ordering.

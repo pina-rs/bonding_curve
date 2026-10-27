@@ -103,8 +103,8 @@ const int pinaBondingCurveErrorMigrationPriceMismatch = 0x17; // 23
 /// Message: "The new creator may not be the launch itself, which can never sign, claim, or receive its LP share."
 const int pinaBondingCurveErrorLaunchAsCreator = 0x18; // 24
 
-/// The launch base mint must sort before its quote mint to reserve a unique graduation pool.
-/// Message: "The launch base mint must sort before its quote mint to reserve a unique graduation pool."
+/// The launch base mint must sort after its quote mint to reserve a unique graduation pool.
+/// Message: "The launch base mint must sort after its quote mint to reserve a unique graduation pool."
 const int pinaBondingCurveErrorInvalidMintOrder = 0x1a; // 26
 
 /// Map of error codes to human-readable messages.
@@ -146,7 +146,7 @@ const Map<int, String> _pinaBondingCurveErrorMessages = {
   pinaBondingCurveErrorDefaultCreator: 'The new creator may not be the default address, which can never sign or claim.',
   pinaBondingCurveErrorMigrationPriceMismatch: 'The launch price no longer matches the migration price derived from its configuration.',
   pinaBondingCurveErrorLaunchAsCreator: 'The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.',
-  pinaBondingCurveErrorInvalidMintOrder: 'The launch base mint must sort before its quote mint to reserve a unique graduation pool.',
+  pinaBondingCurveErrorInvalidMintOrder: 'The launch base mint must sort after its quote mint to reserve a unique graduation pool.',
 };
 
 /// Get the error message for a PinaBondingCurve program error code.

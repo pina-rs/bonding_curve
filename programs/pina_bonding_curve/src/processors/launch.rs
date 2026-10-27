@@ -29,7 +29,8 @@ pub struct CreateLaunchAccounts<'a> {
 	pub creator: &'a AccountView,
 	/// The configuration the launch follows.
 	pub config: &'a AccountView,
-	/// The base mint: new, empty, and controlled by the creator.
+	/// The base mint: new, empty, controlled by the creator, and sorting after
+	/// the quote mint by address bytes.
 	pub base_mint: &'a mut AccountView,
 	/// The configuration's quote mint.
 	pub quote_mint: &'a AccountView,
@@ -78,9 +79,9 @@ impl<'a> ProcessAccountInfos<'a> for CreateLaunchAccounts<'a> {
 		)?;
 
 		// The AMM has one canonical pool per unordered pair and tier. Assign
-		// the smaller mint to the base role before accepting any launch funds,
+		// the larger mint to the base role before accepting any launch funds,
 		// so a reciprocal launch can never reserve the same graduation pool.
-		if self.base_mint.address() >= self.quote_mint.address() {
+		if self.base_mint.address() <= self.quote_mint.address() {
 			return Err(CurveError::InvalidMintOrder.into());
 		}
 

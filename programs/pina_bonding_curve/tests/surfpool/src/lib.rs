@@ -340,6 +340,7 @@ fn reciprocal_launch_is_rejected_before_trading() {
 		let amm = setup_amm(&h);
 		let mut mints = [Keypair::new(), Keypair::new()];
 		mints.sort_by_key(Signer::pubkey);
+		mints.reverse();
 
 		for mint in &mints {
 			h.create_mint_with_authority(mint, &TOKEN_PROGRAM, 6, &h.payer().pubkey(), &[])
@@ -391,7 +392,7 @@ fn reciprocal_launch_is_rejected_before_trading() {
 fn compatible_base_mint(quote: &Pubkey) -> Keypair {
 	(0..4096)
 		.map(|_| Keypair::new())
-		.find(|mint| mint.pubkey() < *quote)
+		.find(|mint| mint.pubkey() > *quote)
 		.expect("compatible base mint")
 }
 

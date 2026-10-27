@@ -21,7 +21,8 @@ pub struct CreateLaunch {
 	pub creator: solana_pubkey::Pubkey,
 	/// The configuration the launch follows.
 	pub config: solana_pubkey::Pubkey,
-	/// The base mint: new, empty, and controlled by the creator.
+	/// The base mint: new, empty, controlled by the creator, and sorting after
+	/// the quote mint by address bytes.
 	pub base_mint: solana_pubkey::Pubkey,
 	/// The configuration's quote mint.
 	pub quote_mint: solana_pubkey::Pubkey,
