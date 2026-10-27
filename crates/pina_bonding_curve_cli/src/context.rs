@@ -453,9 +453,9 @@ mod tests {
 						for (signature, bytes) in transaction
 							.signatures
 							.iter_mut()
-							.zip(wire[1..129].chunks_exact(64))
+							.zip(wire[1..129].as_chunks::<64>().0)
 						{
-							*signature = bytes.try_into().expect("signature");
+							*signature = (*bytes).into();
 						}
 
 						transaction.verify().expect("valid broadcast signatures");
