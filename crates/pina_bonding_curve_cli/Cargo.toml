@@ -34,5 +34,8 @@ solana-signer = { workspace = true }
 solana-transaction = { workspace = true }
 thiserror = { workspace = true }
 
+[dev-dependencies]
+solana-transaction = { workspace = true, features = ["verify"] }
+
 [lints]
 workspace = true
