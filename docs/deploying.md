@@ -64,7 +64,7 @@ With the program deployed and a tier available, create a configuration (see [lau
 pina-curve -u devnet config create --index 0 --quote-mint So11111111111111111111111111111111111111112 \
   --amm-config <AMM_TIER> --terms terms.json
 pina-curve -u devnet launch create --config <CONFIG>
-pina-curve -u devnet buy --base-mint <MINT> --quote-amount 100000000
+pina-curve -u devnet buy --base-mint <MINT> --quote-amount 100000000 --minimum-base-out <MINIMUM_BASE_UNITS>
 pina-curve -u devnet launch show --base-mint <MINT>
 ```
 

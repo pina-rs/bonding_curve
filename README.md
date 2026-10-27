@@ -53,7 +53,7 @@ Launch a token, buy it, and graduate it once it completes:
 
 ```sh
 pina-curve -u devnet launch create --config <CONFIG>
-pina-curve -u devnet buy --base-mint <MINT> --quote-amount 1000000000
+pina-curve -u devnet buy --base-mint <MINT> --quote-amount 1000000000 --minimum-base-out <MINIMUM_BASE_UNITS>
 pina-curve -u devnet launch show --base-mint <MINT>
 pina-curve -u devnet graduate --base-mint <MINT>
 ```
