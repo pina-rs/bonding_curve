@@ -15,8 +15,8 @@ export const SET_LAUNCH_CREATOR_DISCRIMINATOR = 8;
 
 export function getSetLaunchCreatorDiscriminatorBytes(): ReadonlyUint8Array { return getU8Encoder().encode(SET_LAUNCH_CREATOR_DISCRIMINATOR); }
 
-export type SetLaunchCreatorInstruction<TProgram extends string = typeof PINA_BONDING_CURVE_PROGRAM_ADDRESS, TAccountCreator extends string | AccountMeta<string> = string, TAccountLaunch extends string | AccountMeta<string> = string, TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
-Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountCreator extends string ? ReadonlySignerAccount<TAccountCreator> & AccountSignerMeta<TAccountCreator> : TAccountCreator, TAccountLaunch extends string ? WritableAccount<TAccountLaunch> : TAccountLaunch, ...TRemainingAccounts]>;
+export type SetLaunchCreatorInstruction<TProgram extends string = typeof PINA_BONDING_CURVE_PROGRAM_ADDRESS, TAccountCreator extends string | AccountMeta<string> = string, TAccountLaunch extends string | AccountMeta<string> = string, TAccountNewCreatorSigner extends string | AccountMeta<string> = string, TRemainingAccounts extends readonly AccountMeta<string>[] = []> =
+Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array> & InstructionWithAccounts<[TAccountCreator extends string ? ReadonlySignerAccount<TAccountCreator> & AccountSignerMeta<TAccountCreator> : TAccountCreator, TAccountLaunch extends string ? WritableAccount<TAccountLaunch> : TAccountLaunch, TAccountNewCreatorSigner extends string ? ReadonlySignerAccount<TAccountNewCreatorSigner> & AccountSignerMeta<TAccountNewCreatorSigner> : TAccountNewCreatorSigner, ...TRemainingAccounts]>;
 
 export type SetLaunchCreatorInstructionData = { discriminator: number; 
 /** New creator of the launch. */
@@ -38,15 +38,20 @@ export function getSetLaunchCreatorInstructionDataCodec(): FixedSizeCodec<SetLau
     return combineCodec(getSetLaunchCreatorInstructionDataEncoder(), getSetLaunchCreatorInstructionDataDecoder());
 }
 
-export type SetLaunchCreatorInput<TAccountCreator extends InstructionSignerInput = InstructionSignerInput, TAccountLaunch extends InstructionAccountInput = InstructionAccountInput> =  {
+export type SetLaunchCreatorInput<TAccountCreator extends InstructionSignerInput = InstructionSignerInput, TAccountLaunch extends InstructionAccountInput = InstructionAccountInput, TAccountNewCreatorSigner extends InstructionSignerInput = InstructionSignerInput> =  {
   /** The launch's current creator. */
 creator: TAccountCreator;
 /** The launch. */
 launch: TAccountLaunch;
+/**
+ * The new creator, who must accept the handover by signing. The appended
+ * wire slot is optional; processing rejects an omitted acceptance.
+ */
+newCreatorSigner?: TAccountNewCreatorSigner;
 newCreator: SetLaunchCreatorInstructionDataArgs["newCreator"];
 }
 
-export function getSetLaunchCreatorInstruction<TAccountCreator extends InstructionSignerInput, TAccountLaunch extends InstructionAccountInput, TProgramAddress extends Address = typeof PINA_BONDING_CURVE_PROGRAM_ADDRESS>(input: SetLaunchCreatorInput<TAccountCreator, TAccountLaunch>, config?: { programAddress?: TProgramAddress } ): SetLaunchCreatorInstruction<TProgramAddress, ResolvedInstructionAccountMeta<TAccountCreator, InstructionAccountInputAddress<TAccountCreator>>, ResolvedInstructionAccountMeta<TAccountLaunch, InstructionAccountInputAddress<TAccountLaunch>>> {
+export function getSetLaunchCreatorInstruction<TAccountCreator extends InstructionSignerInput, TAccountLaunch extends InstructionAccountInput, TAccountNewCreatorSigner extends InstructionSignerInput, TProgramAddress extends Address = typeof PINA_BONDING_CURVE_PROGRAM_ADDRESS>(input: SetLaunchCreatorInput<TAccountCreator, TAccountLaunch, TAccountNewCreatorSigner>, config?: { programAddress?: TProgramAddress } ): SetLaunchCreatorInstruction<TProgramAddress, ResolvedInstructionAccountMeta<TAccountCreator, InstructionAccountInputAddress<TAccountCreator>>, ResolvedInstructionAccountMeta<TAccountLaunch, InstructionAccountInputAddress<TAccountLaunch>>, ResolvedInstructionAccountMeta<TAccountNewCreatorSigner, InstructionAccountInputAddress<TAccountNewCreatorSigner>>> {
   // Program address.
 const programAddress = config?.programAddress ?? PINA_BONDING_CURVE_PROGRAM_ADDRESS;
 
@@ -54,7 +59,7 @@ const programAddress = config?.programAddress ?? PINA_BONDING_CURVE_PROGRAM_ADDR
 const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
 
  // Original accounts.
-const originalAccounts = { creator: { value: input.creator ?? null, isSigner: true, isWritable: false }, launch: { value: input.launch ?? null, isSigner: false, isWritable: true } }
+const originalAccounts = { creator: { value: input.creator ?? null, isSigner: true, isWritable: false }, launch: { value: input.launch ?? null, isSigner: false, isWritable: true }, newCreatorSigner: { value: input.newCreatorSigner ?? null, isSigner: true, isWritable: false } }
 const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedInstructionAccount>;
 
 
@@ -64,7 +69,7 @@ const args = { ...input,  };
 
 
 
-return Object.freeze({ accounts: [getAccountMeta("creator", accounts.creator), getAccountMeta("launch", accounts.launch)], data: getSetLaunchCreatorInstructionDataEncoder().encode(args as SetLaunchCreatorInstructionDataArgs), programAddress } as SetLaunchCreatorInstruction<TProgramAddress, ResolvedInstructionAccountMeta<TAccountCreator, InstructionAccountInputAddress<TAccountCreator>>, ResolvedInstructionAccountMeta<TAccountLaunch, InstructionAccountInputAddress<TAccountLaunch>>>);
+return Object.freeze({ accounts: [getAccountMeta("creator", accounts.creator), getAccountMeta("launch", accounts.launch), getAccountMeta("newCreatorSigner", accounts.newCreatorSigner)], data: getSetLaunchCreatorInstructionDataEncoder().encode(args as SetLaunchCreatorInstructionDataArgs), programAddress } as SetLaunchCreatorInstruction<TProgramAddress, ResolvedInstructionAccountMeta<TAccountCreator, InstructionAccountInputAddress<TAccountCreator>>, ResolvedInstructionAccountMeta<TAccountLaunch, InstructionAccountInputAddress<TAccountLaunch>>, ResolvedInstructionAccountMeta<TAccountNewCreatorSigner, InstructionAccountInputAddress<TAccountNewCreatorSigner>>>);
 }
 
 export type ParsedSetLaunchCreatorInstruction<TProgram extends string = typeof PINA_BONDING_CURVE_PROGRAM_ADDRESS, TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[]> = { programAddress: Address<TProgram>;
@@ -73,12 +78,17 @@ accounts: {
 creator: TAccountMetas[0];
 /** The launch. */
 launch: TAccountMetas[1];
+/**
+ * The new creator, who must accept the handover by signing. The appended
+ * wire slot is optional; processing rejects an omitted acceptance.
+ */
+newCreatorSigner?: TAccountMetas[2] | undefined;
 };
 data: SetLaunchCreatorInstructionData; };
 
 export function parseSetLaunchCreatorInstruction<TProgram extends string, TAccountMetas extends readonly AccountMeta[]>(instruction: Instruction<TProgram> & InstructionWithAccounts<TAccountMetas> & InstructionWithData<ReadonlyUint8Array>): ParsedSetLaunchCreatorInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 2) {
-  throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, { actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 2 });
+  if (instruction.accounts.length < 3) {
+  throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, { actualAccountMetas: instruction.accounts.length, expectedAccountMetas: 3 });
 }
 let accountIndex = 0;
 const getNextAccount = () => {
@@ -86,5 +96,9 @@ const getNextAccount = () => {
   accountIndex += 1;
   return accountMeta;
 }
-  return { programAddress: instruction.programAddress, accounts: { creator: getNextAccount(), launch: getNextAccount() }, data: getSetLaunchCreatorInstructionDataDecoder().decode(instruction.data) };
+const getNextOptionalAccount = () => {
+  const accountMeta = getNextAccount();
+  return accountMeta.address === instruction.programAddress ? undefined : accountMeta;
+};
+  return { programAddress: instruction.programAddress, accounts: { creator: getNextAccount(), launch: getNextAccount(), newCreatorSigner: getNextOptionalAccount() }, data: getSetLaunchCreatorInstructionDataDecoder().decode(instruction.data) };
 }

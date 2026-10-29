@@ -1016,6 +1016,11 @@
 								"name": "launch",
 								"writable": true,
 								"pda": "launch"
+							},
+							{
+								"name": "new_creator_signer",
+								"signer": true,
+								"optional": true
 							}
 						]
 					}

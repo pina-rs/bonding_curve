@@ -61,6 +61,8 @@ pub enum CurveError {
 	MigrationPriceMismatch = 23,
 	/// The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.
 	LaunchAsCreator = 24,
+	/// An LP recipient may not alias the launch's mandatory writable base mint.
+	InvalidLpRecipient = 25,
 	/// The launch base mint must sort after its quote mint to reserve a unique graduation pool.
 	InvalidMintOrder = 26,
 }

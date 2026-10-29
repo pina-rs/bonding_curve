@@ -297,7 +297,7 @@ The graduated pool is an ordinary Pina AMM pool, and the launch records its addr
 | `ClaimPartnerFees`       | the configuration's authority | Pays the launch's unclaimed partner fees, in quote                 |
 | `ClaimCreatorFees`       | the launch's creator          | Pays the launch's unclaimed creator fees, in quote                 |
 | `ClaimCreatorAllocation` | the launch's creator          | Pays the vested, unclaimed part of the creator allocation, in base |
-| `SetLaunchCreator`       | the launch's creator          | Hands the creator's fee and allocation rights to `new_creator`     |
+| `SetLaunchCreator`       | both creators                 | Hands the creator's fee and allocation rights to `new_creator`     |
 
 ```rust
 use pina_bonding_curve_client::instructions::{ClaimCreatorFees, ClaimCreatorFeesInstructionData};
@@ -319,8 +319,12 @@ An instruction without arguments still takes its data struct; build it with an e
 use pina_bonding_curve_client::instructions::{SetLaunchCreator, SetLaunchCreatorInstructionData};
 
 let data = SetLaunchCreatorInstructionData::new(|data| data.new_creator = successor)?;
-let instruction = SetLaunchCreator::new(state.creator, launch).instruction(data);
+let mut accounts = SetLaunchCreator::new(state.creator, launch);
+accounts.new_creator_signer = Some(successor);
+let instruction = accounts.instruction(data);
 ```
+
+Both the current creator and `successor` must sign the handover transaction.
 
 ## Events
 

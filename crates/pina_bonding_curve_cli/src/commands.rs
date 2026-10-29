@@ -60,6 +60,7 @@ use crate::cli::QuoteArgs;
 use crate::cli::SellArgs;
 use crate::cli::SetCreatorArgs;
 use crate::context::Context;
+use crate::context::load_keypair;
 use crate::design;
 use crate::error::CliError;
 use crate::output;
@@ -244,13 +245,18 @@ fn create_launch(context: &Context, args: &CreateLaunchArgs) -> Result<(), CliEr
 }
 
 fn set_creator(context: &Context, args: &SetCreatorArgs) -> Result<(), CliError> {
+	let successor = load_keypair(&args.new_creator_keypair)?;
+
+	if successor.pubkey() != args.new_creator {
+		return Err(CliError::NewCreatorMismatch);
+	}
+
 	let launch = launch_address(&args.base_mint);
 	let data = SetLaunchCreatorInstructionData::new(|data| data.new_creator = args.new_creator)
 		.map_err(|_| CliError::InvalidInstructionData)?;
-	let signature = context.send(
-		&[SetLaunchCreator::new(context.signer(), launch).instruction(data)],
-		&[],
-	)?;
+	let mut accounts = SetLaunchCreator::new(context.signer(), launch);
+	accounts.new_creator_signer = Some(args.new_creator);
+	let signature = context.send(&[accounts.instruction(data)], &[&successor])?;
 	report(
 		context,
 		"creator updated",

@@ -254,7 +254,14 @@ fn the_cli_runs_a_launch_from_configuration_to_graduation() {
 		);
 		assert!(number(&allocation["details"], "amount") > 0);
 
-		let successor = Keypair::new().pubkey().to_string();
+		let successor_key = Keypair::new();
+		let successor = successor_key.pubkey().to_string();
+		let successor_path = scratch(&successor_key).join("signer.json");
+		std::fs::write(
+			&successor_path,
+			serde_json::to_string(&successor_key.to_bytes().to_vec()).expect("keypair JSON"),
+		)
+		.expect("acceptance keypair");
 		run(
 			&h,
 			&creator,
@@ -265,6 +272,8 @@ fn the_cli_runs_a_launch_from_configuration_to_graduation() {
 				&base_mint,
 				"--new-creator",
 				&successor,
+				"--new-creator-keypair",
+				successor_path.to_str().expect("keypair path"),
 			],
 		);
 		let shown = run(&h, &creator, &["launch", "show", "--base-mint", &base_mint]);

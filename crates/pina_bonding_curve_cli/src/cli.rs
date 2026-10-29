@@ -209,6 +209,9 @@ pub struct SetCreatorArgs {
 	/// New creator.
 	#[arg(long)]
 	pub new_creator: Pubkey,
+	/// Keypair that signs to accept the handover; must match `--new-creator`.
+	#[arg(long)]
+	pub new_creator_keypair: String,
 }
 
 /// `pina-curve quote`

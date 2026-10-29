@@ -57,6 +57,10 @@ pub struct SetLaunchCreatorAccounts<'a> {
 	pub creator: &'a AccountView,
 	/// The launch.
 	pub launch: &'a mut AccountView,
+	/// The new creator, who must accept the handover by signing. The appended
+	/// wire slot is optional; processing rejects an omitted acceptance.
+	#[pina(validate(signer))]
+	pub new_creator_signer: Option<&'a AccountView>,
 }
 
 impl<'a> ProcessAccountInfos<'a> for CreateLaunchAccounts<'a> {
@@ -71,6 +75,14 @@ impl<'a> ProcessAccountInfos<'a> for CreateLaunchAccounts<'a> {
 			.assert_owner(self.quote_token_program.address())
 			.map_err(|_| CurveError::UnsupportedMint)?;
 		let creator = *self.creator.address();
+
+		// A mint key can sign, but Graduate also needs the base mint as a
+		// mutable account. An LP recipient cannot alias that mandatory slot.
+		if (config.creator_lp_share > 0 && self.base_mint.address() == &creator)
+			|| (config.partner_lp_share > 0 && self.base_mint.address() == &config.authority)
+		{
+			return Err(CurveError::InvalidLpRecipient.into());
+		}
 		assert_new_base_mint(
 			self.base_mint,
 			self.base_token_program,
@@ -188,11 +200,26 @@ impl<'a> ProcessAccountInfos<'a> for SetLaunchCreatorAccounts<'a> {
 		if args.new_creator == launch_address {
 			return Err(CurveError::LaunchAsCreator.into());
 		}
+
+		let accepting_creator = self
+			.new_creator_signer
+			.ok_or(ProgramError::MissingRequiredSignature)?;
+
+		if &args.new_creator != accepting_creator.address() {
+			return Err(CurveError::AccountMismatch.into());
+		}
 		let previous_creator;
 		{
 			let mut launch = self.launch.as_account_mut::<Launch>(&ID)?;
 			if &launch.creator != self.creator.address() {
 				return Err(CurveError::Unauthorized.into());
+			}
+
+			// Other mutable graduation account slots are PDAs that cannot
+			// accept this handover. The base mint is the exception: its key can
+			// still sign after the token program takes ownership.
+			if args.new_creator == launch.base_mint {
+				return Err(CurveError::InvalidLpRecipient.into());
 			}
 			previous_creator = launch.creator;
 			launch.creator = args.new_creator;

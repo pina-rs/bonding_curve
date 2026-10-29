@@ -103,6 +103,10 @@ const int pinaBondingCurveErrorMigrationPriceMismatch = 0x17; // 23
 /// Message: "The new creator may not be the launch itself, which can never sign, claim, or receive its LP share."
 const int pinaBondingCurveErrorLaunchAsCreator = 0x18; // 24
 
+/// An LP recipient may not alias the launch's mandatory writable base mint.
+/// Message: "An LP recipient may not alias the launch's mandatory writable base mint."
+const int pinaBondingCurveErrorInvalidLpRecipient = 0x19; // 25
+
 /// The launch base mint must sort after its quote mint to reserve a unique graduation pool.
 /// Message: "The launch base mint must sort after its quote mint to reserve a unique graduation pool."
 const int pinaBondingCurveErrorInvalidMintOrder = 0x1a; // 26
@@ -146,6 +150,7 @@ const Map<int, String> _pinaBondingCurveErrorMessages = {
   pinaBondingCurveErrorDefaultCreator: 'The new creator may not be the default address, which can never sign or claim.',
   pinaBondingCurveErrorMigrationPriceMismatch: 'The launch price no longer matches the migration price derived from its configuration.',
   pinaBondingCurveErrorLaunchAsCreator: 'The new creator may not be the launch itself, which can never sign, claim, or receive its LP share.',
+  pinaBondingCurveErrorInvalidLpRecipient: 'An LP recipient may not alias the launch\'s mandatory writable base mint.',
   pinaBondingCurveErrorInvalidMintOrder: 'The launch base mint must sort after its quote mint to reserve a unique graduation pool.',
 };
 

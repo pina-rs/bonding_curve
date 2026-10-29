@@ -34,6 +34,13 @@ pub struct SetLaunchCreator<'account, 'argument> {
 	/// Required privileges: writable.
 	pub launch: &'account AccountView,
 
+	/// CPI account `newCreatorSigner`.
+	/// The new creator, who must accept the handover by signing. The appended
+	/// wire slot is optional; processing rejects an omitted acceptance.
+	/// Required privileges: read-only and signer.
+	/// Pass `None` to use the target program ID as the account placeholder.
+	pub new_creator_signer: Option<&'account AccountView>,
+
 	/// Instruction arguments encoded and sent as CPI data for `set_launch_creator`.
 	pub ix: SetLaunchCreatorIx<'argument>,
 }
@@ -75,9 +82,13 @@ impl<'account, 'argument> SetLaunchCreator<'account, 'argument> {
 		program: &ProgramAccount<'_>,
 		signers: &[Signer<'_, '_>],
 	) -> ProgramResult {
-		let accounts: [CpiHandle<'_>; 2] = [
+		let accounts: [CpiHandle<'_>; 3] = [
 			CpiHandle::readonly_signer(self.creator),
 			CpiHandle::writable(self.launch)?,
+			match self.new_creator_signer {
+				Some(account) => CpiHandle::readonly_signer(account),
+				None => CpiHandle::readonly(program.account()),
+			},
 		];
 		let data = self.ix.to_bytes()?;
 		let context = CpiContext::new(*program, accounts);

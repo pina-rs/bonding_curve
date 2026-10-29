@@ -12,7 +12,7 @@ Every instruction's data is a one-byte discriminator followed by its fields, pac
 | 5   | [`ClaimPartnerFees`](#claimpartnerfees-and-claimcreatorfees) | configuration authority | Pay out partner fees                         |
 | 6   | [`ClaimCreatorFees`](#claimpartnerfees-and-claimcreatorfees) | launch creator          | Pay out creator fees                         |
 | 7   | [`ClaimCreatorAllocation`](#claimcreatorallocation)          | launch creator          | Pay out the vested allocation                |
-| 8   | [`SetLaunchCreator`](#setlaunchcreator)                      | launch creator          | Hand over creator rights                     |
+| 8   | [`SetLaunchCreator`](#setlaunchcreator)                      | both creators           | Hand over creator rights                     |
 | 255 | `Migrate`                                                    | —                       | Pina's reserved account-migration route      |
 
 ## `CreateConfig`
@@ -168,12 +168,13 @@ Pays the allocation vested so far minus what was already claimed. Errors: `Unaut
 | ------------- | --------- | --------------- |
 | `new_creator` | `Address` | The new creator |
 
-| # | Account   |   | Notes               |
-| - | --------- | - | ------------------- |
-| 0 | `creator` | s | The current creator |
-| 1 | `launch`  | w |                     |
+| # | Account              |   | Notes                                          |
+| - | -------------------- | - | ---------------------------------------------- |
+| 0 | `creator`            | s | The current creator                            |
+| 1 | `launch`             | w |                                                |
+| 2 | `new_creator_signer` | s | Accepts the handover; must match `new_creator` |
 
-Moves future creator fees and the unclaimed allocation to `new_creator`. Errors: `Unauthorized`, `DefaultCreator` (the default address), `LaunchAsCreator` (the launch's own address).
+Moves future creator fees and the unclaimed allocation to `new_creator`, who must sign to accept the handover. A program-owned creator can accept through a CPI signed with its PDA seeds. The base mint cannot become the creator because it occupies a mandatory writable graduation slot. Errors: `Unauthorized`, `DefaultCreator` (the default address), `LaunchAsCreator` (the launch's own address), `InvalidLpRecipient` (the base mint), and `AccountMismatch` (the accepting signer does not match the requested creator).
 
 ## `SweepQuoteDust`
 
@@ -232,6 +233,7 @@ In `Traded`, `quote_amount` is what the buyer paid (fee included) or what the se
 | 22   | `DefaultCreator`                 | The new creator is the default address, which can never sign                 |
 | 23   | `MigrationPriceMismatch`         | The launch price no longer matches the configuration's migration price       |
 | 24   | `LaunchAsCreator`                | The new creator is the launch itself, which can never sign or receive LP     |
+| 25   | `InvalidLpRecipient`             | An LP recipient aliases the launch's mandatory writable base mint            |
 | 26   | `InvalidMintOrder`               | The base mint does not sort after the quote mint by address bytes            |
 
 Pina's own framework errors use codes `0xFFFF0000` and above, for example `DuplicateMutableAccount` when the same writable account appears twice.

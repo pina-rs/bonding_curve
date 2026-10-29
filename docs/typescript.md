@@ -665,7 +665,7 @@ if (claimableAllocation(BigInt(Math.floor(Date.now() / 1000))) > 0n) {
 }
 ```
 
-`getSetLaunchCreatorInstruction({ creator: wallet, launch: launchAddress, newCreator })` hands everything the creator receives from then on (unclaimed and future fees, the rest of the allocation, and graduation LP) to another address, such as a multisig.
+`getSetLaunchCreatorInstruction({ creator: wallet, launch: launchAddress, newCreator, newCreatorSigner: successor })` hands everything the creator receives from then on (unclaimed and future fees, the rest of the allocation, and graduation LP) to another address, such as a multisig. Both creators must sign; `successor.address` must equal `newCreator`.
 
 ## Events
 

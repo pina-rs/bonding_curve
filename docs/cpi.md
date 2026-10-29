@@ -223,7 +223,7 @@ CreateLaunch {
 
 The payer is a transaction signer, and its signature passes through the CPI. The mint must also have zero supply, no freeze authority, and the configuration's base decimals; the curve mints the fixed supply into its own vault and then revokes the mint authority. `activation_time` is a Unix timestamp; zero or a past time opens trading at once.
 
-From then on the PDA holds the launch's creator rights. It signs `ClaimCreatorFees` and `ClaimCreatorAllocation` to collect, and `SetLaunchCreator` to hand the rights to another address (`ix: SetLaunchCreatorIx { new_creator: &new_creator }`):
+From then on the PDA holds the launch's creator rights. It signs `ClaimCreatorFees` and `ClaimCreatorAllocation` to collect, and `SetLaunchCreator` to hand the rights to another address (`ix: SetLaunchCreatorIx { new_creator: &new_creator }`). A handover also supplies `new_creator_signer`, which must match `new_creator` and sign to accept, including PDA signer seeds when the recipient is program-owned:
 
 ```rust
 use pina_bonding_curve_cpi::{ClaimCreatorFees, ClaimCreatorFeesIx};
