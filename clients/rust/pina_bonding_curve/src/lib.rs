@@ -19,6 +19,7 @@
 //! See the repository's `docs/rust-client.md` for complete examples.
 
 pub mod addresses;
+#[allow(clippy::err_expect)] // Generated account tests use `.err().expect(...)`.
 pub mod generated;
 pub use generated::programs::*;
 pub use generated::*;
