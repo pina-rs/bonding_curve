@@ -203,10 +203,12 @@ in
       security:audit
     '';
 
-    # Manual release step: never call from another script, hook, or CI job.
-    # `pina deploy` records the migration publication receipt that freezes the
-    # deployed schema versions; never deploy with `solana program deploy`
-    # directly. See docs/deploying.md for the runbook.
+    # Manual release step: never call from another script, hook, or CI job,
+    # because it needs the program keypair; automation uses
+    # `deploy:program:upgrade`. `pina deploy` records the migration
+    # publication receipt that freezes the deployed schema versions; never
+    # deploy with `solana program deploy` directly. See docs/deploying.md for
+    # the runbook.
     "deploy:program".exec = ''
       set -euo pipefail
       cluster="''${1:?usage: deploy:program <devnet|mainnet-beta> [extra pina deploy flags]}"
@@ -216,6 +218,24 @@ in
         --build \
         --cluster "$cluster" \
         --program-keypair "''${PINA_CURVE_PROGRAM_KEYPAIR:?set PINA_CURVE_PROGRAM_KEYPAIR to the program-id keypair file}" \
+        --upgrade-authority "''${PINA_CURVE_UPGRADE_AUTHORITY:?set PINA_CURVE_UPGRADE_AUTHORITY to the upgrade-authority keypair file}" \
+        --payer "''${PINA_CURVE_DEPLOY_KEYPAIR:?set PINA_CURVE_DEPLOY_KEYPAIR to the fee-payer keypair file}" \
+        "$@"
+    '';
+
+    # Upgrades the program already deployed on a cluster by its declared ID,
+    # without the program keypair, which also controls the address on
+    # mainnet. deploy-devnet.yml runs it on every release; it records the same
+    # publication receipt as `deploy:program`.
+    "deploy:program:upgrade".exec = ''
+      set -euo pipefail
+      cluster="''${1:?usage: deploy:program:upgrade <devnet|mainnet-beta> [extra pina deploy flags]}"
+      shift
+      pina deploy \
+        --project programs/pina_bonding_curve \
+        --build \
+        --upgrade-only \
+        --cluster "$cluster" \
         --upgrade-authority "''${PINA_CURVE_UPGRADE_AUTHORITY:?set PINA_CURVE_UPGRADE_AUTHORITY to the upgrade-authority keypair file}" \
         --payer "''${PINA_CURVE_DEPLOY_KEYPAIR:?set PINA_CURVE_DEPLOY_KEYPAIR to the fee-payer keypair file}" \
         "$@"

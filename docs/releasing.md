@@ -62,8 +62,9 @@ devenv shell monochange notes --output user --target bonding_curve
 ## The release flow
 
 1. Merging to `main` runs `release-pr.yml`, which opens or refreshes a `chore(release): prepare release` pull request with the new version, `changelog.md`, and the user release notes.
-2. Merging that pull request tags `v{version}`, creates a draft GitHub release from the user notes, and dispatches `publish.yml` on the tag.
+2. Merging that pull request tags `v{version}`, creates a draft GitHub release from the user notes, and dispatches `publish.yml` and `deploy-devnet.yml` on the tag.
 3. `publish.yml` publishes the crates to crates.io, `@pina-rs/bonding-curve` to npm, and `pina_bonding_curve` to pub.dev, all through trusted publishing (OIDC), then publishes the GitHub release.
+4. `deploy-devnet.yml` upgrades the devnet program to the tag and opens a pull request recording its migration publication receipt. See [Devnet on every release](deploying.md#devnet-on-every-release).
 
 ### The release-publish check
 
@@ -74,7 +75,7 @@ devenv shell monochange step publish-readiness --from HEAD --output /tmp/readine
 devenv shell monochange step publish-packages --dry-run --all
 ```
 
-The on-chain program is never published by CI; deploy it with [deploying.md](deploying.md).
+CI upgrades the on-chain program on devnet only, after the release is tagged; every mainnet deployment is manual. See [deploying.md](deploying.md).
 
 ## One-time registry setup
 
