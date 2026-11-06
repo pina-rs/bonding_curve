@@ -215,7 +215,7 @@ mod launch_config_version_error_tests {
 
 	#[test]
 	fn stale_and_future_versions_are_distinguishable() {
-		let error = LaunchConfig::try_from_bytes(&envelope(1 as u8)).err().expect("a future envelope must fail");
+		let error = LaunchConfig::try_from_bytes(&envelope(1 as u8)).expect_err("a future envelope must fail");
 		assert_eq!(error, LaunchConfigVersionError::Future { stored: 1 });
 		assert_eq!(LaunchConfigVersionError::Future { stored: 1 }.to_string(), "migration version mismatch: expected 0, received 1 (the data was written by a newer program; upgrade this client)");
 		assert!(
