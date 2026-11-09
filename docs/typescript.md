@@ -702,14 +702,16 @@ for (
 }
 ```
 
-| Event           | Emitted by             | Fields                                                                                                                         |
-| --------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `configCreated` | `CreateConfig`         | `config`, `authority`, `quoteMint`, `ammConfig`, `migrationSqrtPrice`, `saleSupply`, `migrationSupply`                         |
-| `launchCreated` | `CreateLaunch`         | `launch`, `config`, `creator`, `baseMint`, `totalSupply`, `activationTime`                                                     |
-| `traded`        | `Buy`, `Sell`          | `launch`, `trader`, `isBuy` (`1` buy, `0` sale), `baseAmount`, `quoteAmount`, `fee`, `creatorFee`, `sqrtPrice`, `quoteReserve` |
-| `completed`     | The buy that completes | `launch`, `quoteReserve`                                                                                                       |
-| `graduated`     | `Graduate`             | `launch`, `pool`, `poolBase`, `poolQuote`, `migrationFee`, `burnedBase`, `burnedLp`, `creatorLp`, `partnerLp`                  |
-| `claimed`       | The three claims       | `launch`, `claimant`, `kind` (`0` partner fees, `1` creator fees, `2` allocation), `amount`                                    |
+| Event                  | Emitted by             | Fields                                                                                                                         |
+| ---------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `configCreated`        | `CreateConfig`         | `config`, `authority`, `quoteMint`, `ammConfig`, `migrationSqrtPrice`, `saleSupply`, `migrationSupply`                         |
+| `launchCreated`        | `CreateLaunch`         | `launch`, `config`, `creator`, `baseMint`, `totalSupply`, `activationTime`                                                     |
+| `traded`               | `Buy`, `Sell`          | `launch`, `trader`, `isBuy` (`1` buy, `0` sale), `baseAmount`, `quoteAmount`, `fee`, `creatorFee`, `sqrtPrice`, `quoteReserve` |
+| `completed`            | The buy that completes | `launch`, `quoteReserve`                                                                                                       |
+| `graduated`            | `Graduate`             | `launch`, `pool`, `poolBase`, `poolQuote`, `migrationFee`, `burnedBase`, `burnedLp`, `creatorLp`, `partnerLp`                  |
+| `claimed`              | The three claims       | `launch`, `claimant`, `kind` (`0` partner fees, `1` creator fees, `2` allocation), `amount`                                    |
+| `launchCreatorChanged` | `SetLaunchCreator`     | `launch`, `previousCreator`, `newCreator`                                                                                      |
+| `dustSwept`            | `SweepQuoteDust`       | `launch`, `amount`, `creatorFee`, `partnerFee`                                                                                 |
 
 Always pass every log line of one transaction, in order: the parser only trusts `Program data:` lines written while the curve program is the innermost frame. `decodeTradedEvent` and the other per-event decoders read raw event bytes you already know came from the program.
 
