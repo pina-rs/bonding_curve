@@ -62,7 +62,7 @@ Add the cost of anything else in the transaction, such as associated-token-accou
 
 ## Reading events
 
-Every state change emits an event: `ConfigCreated`, `LaunchCreated`, `Traded`, `Completed`, `Graduated`, and `Claimed`. Pass the **complete, ordered** log messages of a transaction to `parsePinaBondingCurveEventsFromLogs`. It follows the runtime's invoke frames and only returns records the curve itself wrote, so the AMM's `PoolCreated` during graduation, or a program that calls the curve, cannot be mistaken for a curve event. The per-event `parse*FromLog` helpers skip that attribution and are only safe for bytes you already know came from the curve.
+Every state change emits an event: `ConfigCreated`, `LaunchCreated`, `Traded`, `Completed`, `Graduated`, `Claimed`, `LaunchCreatorChanged`, and `DustSwept`. Pass the **complete, ordered** log messages of a transaction to `parsePinaBondingCurveEventsFromLogs`. It follows the runtime's invoke frames and only returns records the curve itself wrote, so the AMM's `PoolCreated` during graduation, or a program that calls the curve, cannot be mistaken for a curve event. The per-event `parse*FromLog` helpers skip that attribution and are only safe for bytes you already know came from the curve.
 
 ## Errors
 

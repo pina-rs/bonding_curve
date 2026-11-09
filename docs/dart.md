@@ -4,7 +4,7 @@
 
 ```yaml
 dependencies:
-  pina_bonding_curve: ^0.1.0
+  pina_bonding_curve: ^0.2.0
   solana_kit: ^0.10.0
   solana_kit_rpc_api: ^0.10.0
   # Optional, for token accounts, wrapped SOL, and new mints:
@@ -514,7 +514,7 @@ for (final event in parsePinaBondingCurveEventsFromLogs(logs)) {
 }
 ```
 
-The events are `ConfigCreatedEvent`, `LaunchCreatedEvent`, `TradedEvent`, `CompletedEvent`, `GraduatedEvent`, and `ClaimedEvent` (`kind` `0` partner fees, `1` creator fees, `2` allocation). Pass every log line of one transaction, in order, so records are attributed only to the curve program.
+The events are `ConfigCreatedEvent`, `LaunchCreatedEvent`, `TradedEvent`, `CompletedEvent`, `GraduatedEvent`, `ClaimedEvent` (`kind` `0` partner fees, `1` creator fees, `2` allocation), `LaunchCreatorChangedEvent`, and `DustSweptEvent`. Pass every log line of one transaction, in order, so records are attributed only to the curve program.
 
 ## Errors
 

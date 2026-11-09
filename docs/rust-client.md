@@ -4,8 +4,8 @@
 
 ```toml
 [dependencies]
-pina_bonding_curve_client = "0.1"
-solana-instruction = "3.4"
+pina_bonding_curve_client = "0.2"
+solana-instruction = "3.5"
 solana-pubkey = "4"
 ```
 
@@ -13,13 +13,13 @@ For on-chain callers use [`pina_bonding_curve_cpi`](cpi.md) instead; it is `no_s
 
 ## Layout
 
-| Module         | Contents                                                                                                       |
-| -------------- | -------------------------------------------------------------------------------------------------------------- |
-| crate root     | `PINA_BONDING_CURVE_ID`                                                                                        |
-| `instructions` | One account struct and one `*InstructionData` per instruction, plus `Migrate`, Pina's reserved migration route |
-| `accounts`     | `LaunchConfig` and `Launch` decoders and PDA helpers                                                           |
-| `events`       | `ConfigCreated`, `LaunchCreated`, `Traded`, `Completed`, `Graduated`, `Claimed`                                |
-| `errors`       | `PinaBondingCurveError`                                                                                        |
+| Module         | Contents                                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| crate root     | `PINA_BONDING_CURVE_ID`                                                                                              |
+| `instructions` | One account struct and one `*InstructionData` per instruction, plus `Migrate`, Pina's reserved migration route       |
+| `accounts`     | `LaunchConfig` and `Launch` decoders and PDA helpers                                                                 |
+| `events`       | `ConfigCreated`, `LaunchCreated`, `Traded`, `Completed`, `Graduated`, `Claimed`, `LaunchCreatorChanged`, `DustSwept` |
+| `errors`       | `PinaBondingCurveError`                                                                                              |
 
 ## Units
 
@@ -330,14 +330,16 @@ Both the current creator and `successor` must sign the handover transaction.
 
 The Rust events module decodes one record at a time. Each record starts with a one-byte discriminator and a one-byte schema version. Find the curve's `Program data:` lines in a transaction's logs, base64-decode them, and match on the first byte:
 
-| First byte | Event           |
-| ---------- | --------------- |
-| `1`        | `ConfigCreated` |
-| `2`        | `LaunchCreated` |
-| `3`        | `Traded`        |
-| `4`        | `Completed`     |
-| `5`        | `Graduated`     |
-| `6`        | `Claimed`       |
+| First byte | Event                  |
+| ---------- | ---------------------- |
+| `1`        | `ConfigCreated`        |
+| `2`        | `LaunchCreated`        |
+| `3`        | `Traded`               |
+| `4`        | `Completed`            |
+| `5`        | `Graduated`            |
+| `6`        | `Claimed`              |
+| `7`        | `LaunchCreatorChanged` |
+| `8`        | `DustSwept`            |
 
 ```rust
 use pina_bonding_curve_client::events::{TRADED_DISCRIMINATOR, Traded};

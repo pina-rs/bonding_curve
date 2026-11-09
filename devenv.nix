@@ -101,7 +101,7 @@ in
 
     "test:unit".exec = ''
       set -euo pipefail
-      node --test tools/normalize-generated.test.mjs
+      node --test tools/normalize-generated.test.mjs tools/client-guides.test.mjs
       cargo test --workspace --all-features --locked
       pnpm --dir clients/typescript/pina_bonding_curve build
       pnpm --dir clients/typescript/pina_bonding_curve test
