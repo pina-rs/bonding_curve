@@ -5,8 +5,11 @@
 # systemd, so Nix is installed single-user. The script is idempotent: a second
 # run reuses Nix, the pinned devenv, and already-installed packages.
 #
-# CI installs the same devenv revision from devenv.lock and the same Cachix
-# cache. See .github/workflows/ci.yml.
+# CI installs the devenv revision locked in devenv.lock and pulls binaries
+# from devenv.cachix.org. This script does the same. `nix profile install
+# nixpkgs#devenv` is not used: that would float a different devenv than the
+# one the lockfile's module comes from. Nix 2.35 spells the profile command
+# `nix profile add`. See .github/workflows/ci.yml.
 
 set -euo pipefail
 
@@ -108,7 +111,8 @@ install_devenv() {
 	if nix profile list 2>/dev/null | grep -q 'devenv'; then
 		nix profile remove '.*devenv.*' || nix profile remove 0
 	fi
-	nix profile add --accept-flake-config "github:cachix/devenv/${rev}#devenv"
+	nix --extra-experimental-features 'nix-command flakes' profile add \
+		--accept-flake-config "github:cachix/devenv/${rev}#devenv"
 	mkdir -p "$(dirname "$stamp")"
 	printf '%s\n' "$rev" >"$stamp"
 }
@@ -119,7 +123,14 @@ install_profile_hook
 install_devenv
 install_wrappers
 
+# Realize the locked shell from the binary cache before installing packages,
+# so a later `devenv shell` starts from the evaluated environment.
+echo "Warming the devenv shell..."
+devenv shell -- true
+
 echo "Installing workspace JavaScript and Dart dependencies..."
 devenv shell -- install:all
 
 echo "Cloud agent install complete."
+nix --version
+devenv version

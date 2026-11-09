@@ -10,7 +10,7 @@ This repository is pre-release. The program has no release tag and no supported 
 ## Program changes
 
 - Run commands through `devenv shell <script>`; see `devenv.nix` for the full list.
-- Cursor cloud agents get that toolchain from `.cursor/cloud-agent-install.sh` (single-user Nix, the devenv revision locked in `devenv.lock`, then `install:all`). There is no long-running service to start: build, lint, and test on demand.
+- Cursor cloud agents get that toolchain from `.cursor/cloud-agent-install.sh`: single-user Nix with flakes enabled, the devenv revision locked in `devenv.lock` (pulled from `devenv.cachix.org`), a warmed `devenv shell`, then `install:all`. There is no long-running service to start: build, lint, and test on demand with `devenv shell -- <script>`.
 - After changing any account, instruction, or event, run `pina migrations create --project programs/pina_bonding_curve`, then `devenv shell generate:clients`, and commit `migrations/` with the regenerated clients.
 - Never edit files under `clients/**/generated/`, `clients/dart/lib/src/generated/`, `.pina-generated.json`, `vendor/pina_amm/`, or `migrations/` by hand. Client manifests and entrypoints (`Cargo.toml`, `package.json`, `pubspec.yaml`, `src/lib.rs`, `src/index.ts`) are hand-owned. `tools/normalize-generated.mjs` is the only post-processing step, and it has its own test.
 - Every hand-written public item and field carries a doc comment. Error variants keep a one-line doc comment: generated clients use that line as the error message.
