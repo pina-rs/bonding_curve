@@ -6,9 +6,11 @@ linkWorkspacePackages: true
 preferWorkspacePackages: true
 
 # Wrangler's local runtime and the bundler install platform binaries.
-onlyBuiltDependencies:
-  - esbuild
-  - workerd
+# pnpm 11 replaced onlyBuiltDependencies with allowBuilds. Packages that are
+# not listed are not allowed to run lifecycle scripts.
+allowBuilds:
+  esbuild: true
+  workerd: true
 
 # miniflare (through wrangler) pins sharp 0.35.4, which carries GHSA-wq5f-xc86-pv6w
 # and GHSA-rgj7-g3m4-5g8c. 0.35.5 is the patched release of the same minor line.
