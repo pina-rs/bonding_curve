@@ -4,7 +4,7 @@ Dart and Flutter client for the [Pina Bonding Curve](https://github.com/pina-rs/
 
 ```yaml
 dependencies:
-  pina_bonding_curve: ^0.1.0
+  pina_bonding_curve: ^0.2.0
 ```
 
 ```dart

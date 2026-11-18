@@ -4,7 +4,7 @@ Rust client for the [Pina Bonding Curve](https://github.com/pina-rs/bonding_curv
 
 ```toml
 [dependencies]
-pina_bonding_curve_client = "0.1"
+pina_bonding_curve_client = "0.2"
 ```
 
 ```rust
