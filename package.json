@@ -2,7 +2,7 @@
 	"name": "@pina-rs/bonding-curve-workspace",
 	"private": true,
 	"type": "module",
-	"packageManager": "pnpm@10.17.1",
+	"packageManager": "pnpm@12.21.0",
 	"description": "Pina Bonding Curve workspace: pinned Codama renderers and the generated TypeScript client.",
 	"scripts": {
 		"benchmark": "tsx scripts/benchmark.ts",

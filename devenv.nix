@@ -1,6 +1,73 @@
 { pkgs, inputs, ... }:
 let
   custom = inputs.ifiokjr-nixpkgs.packages.${pkgs.stdenv.hostPlatform.system};
+
+  # nixpkgs in devenv.lock ships pnpm 12.3.4. Pin the official 12.21.0
+  # executable: `packageManager` requires that exact release. Standalone pnpm
+  # (@pnpm/exe) before 10.34.8, and 11.x before 11.28.8, bundles a Node that
+  # trusts compromised eMudhra certificates (GHSA-w8f5-6m3h-r453). pnpm 12 does
+  # not. This binding is what `packages` uses; `with pkgs` does not override it.
+  pnpmVersion = "12.21.0";
+  pnpmExe =
+    let
+      sources = {
+        x86_64-linux = {
+          url = "https://registry.npmjs.org/@pnpm/exe.linux-x64/-/exe.linux-x64-${pnpmVersion}.tgz";
+          hash = "sha512-8eufCjHXspKbNS/kh8q4Q0gqJoOuvC4Q5pgos6XS8By/nAMtP+jf8F1Cw9er840kfAX+PJ/ts+A9qnLE91rvXQ==";
+        };
+        aarch64-linux = {
+          url = "https://registry.npmjs.org/@pnpm/exe.linux-arm64/-/exe.linux-arm64-${pnpmVersion}.tgz";
+          hash = "sha512-4Oj/iF2TDCe2lcH0n4TupPR5sSdrNLclJB6xBElLMPCUOAvBhdf2rRlSaO5M4erJ6g4Fyy7YTXTpcmfFsKyxEA==";
+        };
+        x86_64-darwin = {
+          url = "https://registry.npmjs.org/@pnpm/exe.darwin-x64/-/exe.darwin-x64-${pnpmVersion}.tgz";
+          hash = "sha512-EzpvcsaE6hrrgYeEiAFYd2rSgFybYyxXhkAY7K3y6Hg3loVfcyJ81hHczpFzi8lW5RXtUlFECRPZ8ZAMRFQYYg==";
+        };
+        aarch64-darwin = {
+          url = "https://registry.npmjs.org/@pnpm/exe.darwin-arm64/-/exe.darwin-arm64-${pnpmVersion}.tgz";
+          hash = "sha512-F5OyMX/6zLSowpTZEQRojbCmPS1Pq+fyRaIinslsIe6Glh3qbyQ52u+Fe0eEzSaRuIbWZkXmAAXSWh6Q5Wrlgg==";
+        };
+      };
+      system = pkgs.stdenv.hostPlatform.system;
+    in
+    sources.${system} or (throw "pnpm ${pnpmVersion} has no binary for ${system}");
+  pnpm = pkgs.stdenv.mkDerivation {
+    pname = "pnpm";
+    version = pnpmVersion;
+    src = pkgs.fetchurl pnpmExe;
+    sourceRoot = "package";
+
+    nativeBuildInputs =
+      pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.autoPatchelfHook ]
+      ++ [ pkgs.makeWrapper ];
+    buildInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.stdenv.cc.cc.lib ];
+
+    dontBuild = true;
+    dontConfigure = true;
+    dontStrip = true;
+
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 pnpm $out/bin/pnpm
+      makeWrapper $out/bin/pnpm $out/bin/pnpx --add-flag dlx
+      ln -s pnpm $out/bin/pn
+      ln -s pnpx $out/bin/pnx
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "Fast, disk space efficient package manager for JavaScript";
+      homepage = "https://pnpm.io/";
+      license = pkgs.lib.licenses.mit;
+      mainProgram = "pnpm";
+      platforms = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+    };
+  };
 in
 {
   packages = with pkgs; [
