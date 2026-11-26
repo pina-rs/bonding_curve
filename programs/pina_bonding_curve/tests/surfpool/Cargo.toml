@@ -12,7 +12,7 @@ description = "End-to-end tests that run the compiled Pina Bonding Curve and Pin
 
 [dev-dependencies]
 pina_bonding_curve_client = { path = "../../../../clients/rust/pina_bonding_curve" }
-pina_test = "=0.24.0"
+pina_test = "=0.25.0"
 serde_json = "1"
 solana-commitment-config = "=3.1.1"
 solana-message = "=4.6.0"
