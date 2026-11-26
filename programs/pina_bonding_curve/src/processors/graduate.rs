@@ -5,6 +5,7 @@ use pina_amm_cpi::CreatePool;
 use pina_amm_cpi::CreatePoolIx;
 use pina_amm_cpi::ProgramAccount;
 
+use super::common::AMM_AUTHORITY;
 use super::common::ConfigSnapshot;
 use super::common::LaunchSnapshot;
 use super::common::launch_signer_seeds;
@@ -181,8 +182,7 @@ impl<'a> ProcessAccountInfos<'a> for GraduateAccounts<'a> {
 		{
 			return Err(CurveError::AccountMismatch.into());
 		}
-		let (amm_authority, amm_authority_bump) =
-			AmmAuthority::try_find_pda(&ID).ok_or(CurveError::AccountMismatch)?;
+		let (amm_authority, amm_authority_bump) = AMM_AUTHORITY;
 		if self.amm_authority.address() != &amm_authority {
 			return Err(CurveError::AccountMismatch.into());
 		}

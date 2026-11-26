@@ -3,6 +3,7 @@
 use pina::*;
 use pina_amm_cpi::accounts::AmmConfig;
 
+use super::common::AMM_AUTHORITY;
 use crate::ID;
 use crate::curve::Curve;
 use crate::curve::MAX_SEGMENTS;
@@ -16,7 +17,6 @@ use crate::math::Rounding;
 use crate::math::share_floor;
 use crate::math::sqrt_floor;
 use crate::state::AMM_MINIMUM_LIQUIDITY;
-use crate::state::AmmAuthority;
 use crate::state::FEE_RATE_DENOMINATOR;
 use crate::state::LaunchConfig;
 use crate::state::MAX_END_FEE_RATE;
@@ -86,7 +86,7 @@ fn assert_restricted_amm_tier(amm_config: &AccountView) -> ProgramResult {
 		let data = amm_config.try_borrow()?;
 		AmmConfig::parse(&data).ok_or(CurveError::InvalidAmmConfig)?
 	};
-	let (authority, _) = AmmAuthority::try_find_pda(&ID).ok_or(CurveError::InvalidAmmConfig)?;
+	let (authority, _) = AMM_AUTHORITY;
 	if tier.pool_creator_authority != authority {
 		return Err(CurveError::InvalidAmmConfig.into());
 	}

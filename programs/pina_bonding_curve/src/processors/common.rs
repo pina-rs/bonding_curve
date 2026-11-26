@@ -8,11 +8,16 @@ use crate::ID;
 use crate::curve::Curve;
 use crate::curve::MAX_SEGMENTS;
 use crate::errors::CurveError;
+use crate::state::AmmAuthority;
 use crate::state::Launch;
 use crate::state::LaunchConfig;
 use crate::state::LaunchConfigZc;
 use crate::state::LaunchSeedsWithBump;
 use crate::state::LaunchStatus;
+
+/// This program's single Pina AMM pool-creator authority PDA and its canonical
+/// bump, derived at compile time from `[AMM_AUTHORITY_SEED]`.
+pub(crate) const AMM_AUTHORITY: (Address, u8) = AmmAuthority::find_pda_const(&ID);
 
 /// The current Unix timestamp.
 pub(crate) fn now() -> Result<i64, ProgramError> {
@@ -150,4 +155,14 @@ impl LaunchSnapshot {
 /// of the seed-building code instead of a monomorphized copy per call site.
 pub(crate) fn launch_signer_seeds(snapshot: &LaunchSnapshot) -> LaunchSeedsWithBump<'_> {
 	Launch::seeds(&snapshot.base_mint).with_bump(snapshot.bump)
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn const_amm_authority_matches_runtime_derivation() {
+		assert_eq!(AMM_AUTHORITY, AmmAuthority::find_pda(&ID));
+	}
 }
