@@ -4,7 +4,7 @@
 
 ```toml
 [dependencies]
-pina = { version = "0.24", default-features = false, features = ["derive", "token"] }
+pina = { version = "0.25", default-features = false, features = ["derive", "token"] }
 pina_bonding_curve_cpi = "0.2"
 ```
 
