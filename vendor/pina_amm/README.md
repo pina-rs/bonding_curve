@@ -12,7 +12,7 @@ import instead so the provenance below stays accurate.
 | --- | --- |
 | Program ID | `pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi` |
 | IDL source | file `target/idl/pina_amm.json` |
-| IDL SHA-256 | `67119b77c0fa858f5f289e7a8069f67ca49e2fbb5359627db0aef33fb329b2f8` |
+| IDL SHA-256 | `ec47948a14d1c0447211505c580c0e3b2ca12493818b1f1560145ace4d22bbd4` |
 | Generator | `pina_cpi_renderer` 0.23.0 |
 
 A CPI crate is a copy of another program's interface, so this digest is the
