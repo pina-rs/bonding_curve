@@ -11,6 +11,42 @@ use pina::Address;
 use pina::CpiProgramId;
 use pina::Program;
 
+/// # Pina Bonding Curve
+/// 
+/// A launchpad program for Solana, built with [Pina](https://github.com/pina-rs/pina),
+/// that sells a new token along a configurable price curve and then graduates
+/// it into the [Pina AMM](https://github.com/pina-rs/amm).
+/// 
+/// The design follows Meteora's Dynamic Bonding Curve:
+/// 
+/// - **Launch configurations** ([`LaunchConfig`]) belong to a partner — a
+/// launchpad, app, or community — who chooses the curve, the quote token,
+/// the fees, how fees split with creators, the creator's vested allocation,
+/// and where the liquidity goes at graduation. Anyone can create one.
+/// - **Curves** are up to sixteen segments of concentrated liquidity between
+/// square-root prices ([`curve`]), so a configuration can describe anything
+/// from a single constant-product curve to a hand-shaped price schedule.
+/// - **Launches** ([`Launch`]) mint a creator's fixed supply into a vault the
+/// program controls, revoke the mint authority, and trade along the curve
+/// until the configured amount of quote has been raised.
+/// - **Migration** is permissionless: anyone can move a completed launch into a
+/// Pina AMM pool at exactly the curve's final price. The AMM tier is
+/// restricted to this program, so nobody can create that pool first.
+/// 
+/// ## Module map
+/// 
+/// | Module | Contents |
+/// | --- | --- |
+/// | [`state`] | Account layouts, seeds, and limits |
+/// | [`instructions`] | Instruction data layouts and discriminators |
+/// | [`processors`] | Account lists and handlers for every instruction |
+/// | [`curve`] | Segment math, buys, sells, and configuration quantities |
+/// | [`math`] | 256-bit helpers, fees, the fee schedule, and vesting |
+/// | [`events`] | Events emitted to the transaction log |
+/// | [`errors`] | Program error codes |
+/// 
+/// Instruction discriminators. Values are part of the wire format.
+#[allow(rustdoc::broken_intra_doc_links, clippy::doc_lazy_continuation)]
 pub const PINA_BONDING_CURVE_ID: Address = pina::address!("Curve1GqpqznjxpJzH313L9CRhAehHaikb4SJMFQeBvP");
 
 /// Marker for the `pinaBondingCurve` program used by generated CPI builders.
