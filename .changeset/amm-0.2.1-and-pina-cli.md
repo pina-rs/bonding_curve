@@ -1,7 +1,7 @@
 ---
-bonding_curve: patch
+pina_bonding_curve_cpi: fix
 ---
 
-# Track Pina AMM 0.2.1 and Pina CLI 0.25.1
+# Update Pina AMM to 0.2.1 and regenerate CPI docs
 
-Update `amm.rev` to `pina-rs/amm` v0.2.1 (`0ca40de5`) and pin a dedicated `ifiokjr-nixpkgs-pina` input at `d224cba7` so the dev shell uses `pina` 0.25.1 while keeping `agave` 4.2.2 and `monochange` 0.21.0 unchanged. Re-importing `vendor/pina_amm` with `pina 0.25.1` drops the duplicate `pina 0.23.0` dependency from `Cargo.lock` and propagates top-level program docs into `pina_bonding_curve_cpi` without changing any client wire format or API.
+Regenerate `pina_bonding_curve_cpi` with `pina` CLI 0.25.1, adding program-level doc comments to `PINA_BONDING_CURVE_ID` with no wire or public API changes. The vendored `pina_amm` CPI crate is re-imported against `pina-rs/amm` v0.2.1 (`0ca40de5`) on `pina` 0.25, dropping the duplicate `pina 0.23.0` dependency from `Cargo.lock` so the deployed program binary shrinks by 48 bytes (`116,240 -> 116,192 B`) and `graduate` drops 16.84% in compute units (`68,581 -> 57,032 CU`). No API or source changes occur in the Rust, TypeScript, or Dart clients or the CLI.

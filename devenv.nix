@@ -1,6 +1,7 @@
 { pkgs, inputs, ... }:
 let
   custom = inputs.ifiokjr-nixpkgs.packages.${pkgs.stdenv.hostPlatform.system};
+  customMonochange = inputs.ifiokjr-nixpkgs-monochange.packages.${pkgs.stdenv.hostPlatform.system};
   customPina = inputs.ifiokjr-nixpkgs-pina.packages.${pkgs.stdenv.hostPlatform.system};
 in
 {
@@ -9,7 +10,7 @@ in
     cargo-deny
     curl
     custom.agave
-    custom.monochange
+    customMonochange.monochange
     customPina.pina
     dart
     dprint
