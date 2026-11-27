@@ -4,7 +4,7 @@
 
 ```toml
 [dependencies]
-pina_bonding_curve_cpi = "0.2"
+pina_bonding_curve_cpi = "0.2.0"
 ```
 
 ```rust

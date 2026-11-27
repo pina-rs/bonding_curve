@@ -165,6 +165,12 @@ changelog = { path = "changelog.md", format = "keep_a_changelog", include = "all
 versioned_files = [
 	{ path = "Cargo.toml", type = "cargo", fields = ["workspace.package.version"] },
 	{ path = "Cargo.toml", type = "cargo", fields = ["workspace.dependencies.pina_bonding_curve_client.version"] },
+	{ path = "docs/rust-client.md", regex = 'pina_bonding_curve_client = "(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)"' },
+	{ path = "clients/rust/pina_bonding_curve/README.md", regex = 'pina_bonding_curve_client = "(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)"' },
+	{ path = "docs/cpi.md", regex = 'pina_bonding_curve_cpi = "(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)"' },
+	{ path = "clients/cpi/pina_bonding_curve/README.md", regex = 'pina_bonding_curve_cpi = "(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)"' },
+	{ path = "docs/dart.md", regex = 'pina_bonding_curve: \^(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)' },
+	{ path = "clients/dart/README.md", regex = 'pina_bonding_curve: \^(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)' },
 ]
 
 [ecosystems.cargo]
