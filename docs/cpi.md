@@ -5,7 +5,7 @@
 ```toml
 [dependencies]
 pina = { version = "0.25", default-features = false, features = ["derive", "token"] }
-pina_bonding_curve_cpi = "0.2.0"
+pina_bonding_curve_cpi = "0.2.1"
 ```
 
 The crate itself needs no `pina` features. The examples below use `derive` for `#[derive(Accounts)]` and `#[pda]`, and `token` to read token accounts.

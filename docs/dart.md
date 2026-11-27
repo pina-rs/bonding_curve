@@ -4,7 +4,7 @@
 
 ```yaml
 dependencies:
-  pina_bonding_curve: ^0.2.0
+  pina_bonding_curve: ^0.2.1
   solana_kit: ^0.10.0
   solana_kit_rpc_api: ^0.10.0
   # Optional, for token accounts, wrapped SOL, and new mints:

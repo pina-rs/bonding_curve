@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.1) (2026-11-27)
+
+Grouped release for `bonding_curve`.
+
+### Fixes
+
+- **Update Pina to 0.25.1.** Track the Pina 0.25.1 release so the program, CPI crate, clients, CLI and Surfpool tests build against the current framework. 0.25.1 removes the binary-size and compute-unit regressions 0.25.0 introduced for shared account structs and optional mutable accounts. The performance workflow records the compute-unit and binary-size effect against the pull request's base.
+  _Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #36](https://github.com/pina-rs/bonding_curve/pull/36)
+
 ## [0.2.0](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.0) (2026-11-06)
 
 Grouped release for `bonding_curve`.
