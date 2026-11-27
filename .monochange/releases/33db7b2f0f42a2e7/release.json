@@ -1,0 +1,272 @@
+{
+	"schema_version": "0.10",
+	"kind": "monochange.releaseRecord",
+	"created_at": "2026-11-27T10:56:47Z",
+	"command": "release",
+	"version": "0.2.1",
+	"versions": {
+		"bonding_curve": "0.2.1"
+	},
+	"release_targets": [
+		{
+			"id": "bonding_curve",
+			"kind": "group",
+			"version": "0.2.1",
+			"version_format": "primary",
+			"tag": true,
+			"release": true,
+			"tag_name": "v0.2.1",
+			"rendered_title": "v0.2.1 (2026-11-27)",
+			"rendered_changelog_title": "[0.2.1](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.1) (2026-11-27)",
+			"members": [
+				"pina_bonding_curve_program",
+				"pina_bonding_curve_cpi",
+				"pina_bonding_curve_client",
+				"pina_bonding_curve_cli",
+				"pina_bonding_curve_client_typescript",
+				"pina_bonding_curve_client_dart"
+			]
+		}
+	],
+	"released_packages": [
+		"@pina-rs/bonding-curve",
+		"pina_bonding_curve",
+		"pina_bonding_curve_cli",
+		"pina_bonding_curve_client",
+		"pina_bonding_curve_cpi"
+	],
+	"changed_files": [
+		"Cargo.lock",
+		"Cargo.toml",
+		"changelog.md",
+		"clients/cpi/pina_bonding_curve/Cargo.toml",
+		"clients/cpi/pina_bonding_curve/README.md",
+		"clients/dart/README.md",
+		"clients/dart/pubspec.yaml",
+		"clients/rust/pina_bonding_curve/Cargo.toml",
+		"clients/rust/pina_bonding_curve/README.md",
+		"clients/typescript/pina_bonding_curve/package.json",
+		"crates/pina_bonding_curve_cli/Cargo.toml",
+		"docs/cpi.md",
+		"docs/dart.md",
+		"docs/rust-client.md",
+		"programs/pina_bonding_curve/Cargo.toml"
+	],
+	"package_publications": [
+		{
+			"package": "pina_bonding_curve_cli",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.2.1",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.2.1",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client_dart",
+			"ecosystem": "dart",
+			"registry": "pub_dev",
+			"version": "0.2.1",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client_typescript",
+			"ecosystem": "npm",
+			"registry": "npm",
+			"version": "0.2.1",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_cpi",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.2.1",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		}
+	],
+	"updated_changelogs": [
+		"changelog.md"
+	],
+	"deleted_changesets": [
+		".changeset/pina-0.25.1.md"
+	],
+	"changesets": [
+		{
+			"path": ".changeset/pina-0.25.1.md",
+			"summary": "Update Pina to 0.25.1",
+			"details": "Track the Pina 0.25.1 release so the program, CPI crate, clients, CLI and Surfpool tests build against the current framework. 0.25.1 removes the binary-size and compute-unit regressions 0.25.0 introduced for shared account structs and optional mutable accounts. The performance workflow records the compute-unit and binary-size effect against the pull request's base.",
+			"targets": [
+				{
+					"id": "bonding_curve",
+					"kind": "group",
+					"bump": "patch",
+					"origin": "direct-change",
+					"evidence_refs": [],
+					"change_type": "patch"
+				}
+			],
+			"context": {
+				"provider": "github",
+				"host": "github.com",
+				"capabilities": {
+					"commit_web_urls": true,
+					"actor_profiles": true,
+					"review_request_lookup": true,
+					"related_issues": true,
+					"issue_comments": true
+				},
+				"introduced": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "1edaceb3878718bb4f9187fd61a144a00c581e30",
+						"short_sha": "1edaceb",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/1edaceb3878718bb4f9187fd61a144a00c581e30",
+						"authored_at": "2026-11-27T09:54:20Z",
+						"committed_at": "2026-11-27T09:54:20Z",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#36",
+						"title": "chore(deps): update Pina to 0.25.1",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/36",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"last_updated": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "1edaceb3878718bb4f9187fd61a144a00c581e30",
+						"short_sha": "1edaceb",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/1edaceb3878718bb4f9187fd61a144a00c581e30",
+						"authored_at": "2026-11-27T09:54:20Z",
+						"committed_at": "2026-11-27T09:54:20Z",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#36",
+						"title": "chore(deps): update Pina to 0.25.1",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/36",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"related_issues": []
+			}
+		}
+	],
+	"changelogs": [
+		{
+			"owner_id": "bonding_curve",
+			"owner_kind": "group",
+			"output": "default",
+			"stream": "default",
+			"path": "changelog.md",
+			"format": "keep_a_changelog",
+			"notes": {
+				"title": "[0.2.1](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.1) (2026-11-27)",
+				"summary": [
+					"Grouped release for `bonding_curve`."
+				],
+				"sections": [
+					{
+						"title": "Fixes",
+						"collapsed": false,
+						"entries": [
+							"- **Update Pina to 0.25.1.** Track the Pina 0.25.1 release so the program, CPI crate, clients, CLI and Surfpool tests build against the current framework. 0.25.1 removes the binary-size and compute-unit regressions 0.25.0 introduced for shared account structs and optional mutable accounts. The performance workflow records the compute-unit and binary-size effect against the pull request's base.\n  _Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #36](https://github.com/pina-rs/bonding_curve/pull/36)"
+						]
+					}
+				]
+			},
+			"rendered": "## [0.2.1](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.1) (2026-11-27)\n\nGrouped release for `bonding_curve`.\n\n### Fixes\n\n- **Update Pina to 0.25.1.** Track the Pina 0.25.1 release so the program, CPI crate, clients, CLI and Surfpool tests build against the current framework. 0.25.1 removes the binary-size and compute-unit regressions 0.25.0 introduced for shared account structs and optional mutable accounts. The performance workflow records the compute-unit and binary-size effect against the pull request's base.\n  _Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #36](https://github.com/pina-rs/bonding_curve/pull/36)"
+		}
+	],
+	"provider": {
+		"kind": "github",
+		"owner": "pina-rs",
+		"repo": "bonding_curve",
+		"host": null
+	}
+}
