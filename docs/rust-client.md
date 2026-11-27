@@ -4,7 +4,7 @@
 
 ```toml
 [dependencies]
-pina_bonding_curve_client = "0.2"
+pina_bonding_curve_client = "0.2.0"
 solana-instruction = "3.5"
 solana-pubkey = "4"
 ```
