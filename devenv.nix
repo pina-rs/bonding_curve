@@ -1,6 +1,7 @@
 { pkgs, inputs, ... }:
 let
   custom = inputs.ifiokjr-nixpkgs.packages.${pkgs.stdenv.hostPlatform.system};
+  customPina = inputs.ifiokjr-nixpkgs-pina.packages.${pkgs.stdenv.hostPlatform.system};
 in
 {
   packages = with pkgs; [
@@ -9,7 +10,7 @@ in
     curl
     custom.agave
     custom.monochange
-    custom.pina
+    customPina.pina
     dart
     dprint
     git

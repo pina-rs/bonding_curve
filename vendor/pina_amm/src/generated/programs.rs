@@ -11,6 +11,48 @@ use pina::Address;
 use pina::CpiProgramId;
 use pina::Program;
 
+/// # Pina AMM
+/// 
+/// A permissionless constant-product automated market maker for Solana, built
+/// with [Pina](https://github.com/pina-rs/pina).
+/// 
+/// The program follows the shape of Raydium's CP-Swap and keeps only the parts
+/// every integration needs:
+/// 
+/// - **Fee tiers** ([`AmmConfig`]) are created by the program's upgrade
+/// authority. Each tier fixes a trade fee, the protocol's share of that fee,
+/// and an optional creator fee. A tier can be restricted to one pool-creator
+/// signer so another program (for example a bonding-curve launchpad) can
+/// create pools that cannot be front-run.
+/// - **Pools** ([`Pool`]) are created by anyone under a tier. Each pool
+/// snapshots its tier's rates, so a tier update never changes the economics
+/// of an existing pool.
+/// - **Swaps** use `x * y = k` with fees rounded in the pool's favour, for both
+/// exact-input and exact-output trades.
+/// - **Liquidity** is represented by a legacy SPL Token LP mint owned by the
+/// pool. A small amount of liquidity is locked forever when the pool is
+/// created, so the pool can never be emptied.
+/// 
+/// Reserves are never stored for pricing. A pool's reserve is its vault
+/// balance minus the protocol and creator fees it has accrued but not yet paid
+/// out, so tokens sent directly to a vault become liquidity for every LP. The
+/// only stored copy belongs to the time-weighted price accumulator, which
+/// prices each elapsed interval with the reserves recorded at its start so a
+/// donation can never reprice the past.
+/// 
+/// ## Module map
+/// 
+/// | Module | Contents |
+/// | --- | --- |
+/// | [`state`] | Account layouts, seeds, and PDA helpers |
+/// | [`instructions`] | Instruction data layouts and discriminators |
+/// | [`processors`] | Account lists and handlers for every instruction |
+/// | [`math`] | Pure, checked swap and liquidity arithmetic |
+/// | [`events`] | Events emitted to the transaction log |
+/// | [`errors`] | Program error codes |
+/// 
+/// Instruction discriminators. Values are part of the wire format.
+#[allow(rustdoc::broken_intra_doc_links, clippy::doc_lazy_continuation)]
 pub const PINA_AMM_ID: Address = pina::address!("pAMMzVPRwtrxQs2CjLTUUpfCAp9XdvVmwwVhpAuCobi");
 
 /// Marker for the `pinaAmm` program used by generated CPI builders.
