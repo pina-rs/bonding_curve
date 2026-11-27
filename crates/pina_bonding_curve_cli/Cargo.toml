@@ -1,6 +1,6 @@
 [package]
 name = "pina_bonding_curve_cli"
-version = "0.2.1"
+version = "0.2.2"
 categories = ["command-line-utilities", "cryptography::cryptocurrencies"]
 edition.workspace = true
 homepage.workspace = true

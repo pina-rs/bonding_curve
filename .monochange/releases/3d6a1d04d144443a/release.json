@@ -1,0 +1,272 @@
+{
+	"schema_version": "0.10",
+	"kind": "monochange.releaseRecord",
+	"created_at": "2026-11-27T22:36:54Z",
+	"command": "release",
+	"version": "0.2.2",
+	"versions": {
+		"bonding_curve": "0.2.2"
+	},
+	"release_targets": [
+		{
+			"id": "bonding_curve",
+			"kind": "group",
+			"version": "0.2.2",
+			"version_format": "primary",
+			"tag": true,
+			"release": true,
+			"tag_name": "v0.2.2",
+			"rendered_title": "v0.2.2 (2026-11-27)",
+			"rendered_changelog_title": "[0.2.2](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.2) (2026-11-27)",
+			"members": [
+				"pina_bonding_curve_program",
+				"pina_bonding_curve_cpi",
+				"pina_bonding_curve_client",
+				"pina_bonding_curve_cli",
+				"pina_bonding_curve_client_typescript",
+				"pina_bonding_curve_client_dart"
+			]
+		}
+	],
+	"released_packages": [
+		"@pina-rs/bonding-curve",
+		"pina_bonding_curve",
+		"pina_bonding_curve_cli",
+		"pina_bonding_curve_client",
+		"pina_bonding_curve_cpi"
+	],
+	"changed_files": [
+		"Cargo.lock",
+		"Cargo.toml",
+		"changelog.md",
+		"clients/cpi/pina_bonding_curve/Cargo.toml",
+		"clients/cpi/pina_bonding_curve/README.md",
+		"clients/dart/README.md",
+		"clients/dart/pubspec.yaml",
+		"clients/rust/pina_bonding_curve/Cargo.toml",
+		"clients/rust/pina_bonding_curve/README.md",
+		"clients/typescript/pina_bonding_curve/package.json",
+		"crates/pina_bonding_curve_cli/Cargo.toml",
+		"docs/cpi.md",
+		"docs/dart.md",
+		"docs/rust-client.md",
+		"programs/pina_bonding_curve/Cargo.toml"
+	],
+	"package_publications": [
+		{
+			"package": "pina_bonding_curve_cli",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.2.2",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.2.2",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client_dart",
+			"ecosystem": "dart",
+			"registry": "pub_dev",
+			"version": "0.2.2",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_client_typescript",
+			"ecosystem": "npm",
+			"registry": "npm",
+			"version": "0.2.2",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		},
+		{
+			"package": "pina_bonding_curve_cpi",
+			"ecosystem": "cargo",
+			"registry": "crates_io",
+			"version": "0.2.2",
+			"mode": "builtin",
+			"trusted_publishing": {
+				"enabled": true,
+				"mode": "required",
+				"repository": "pina-rs/bonding_curve",
+				"workflow": "publish.yml",
+				"environment": "publisher"
+			}
+		}
+	],
+	"updated_changelogs": [
+		"changelog.md"
+	],
+	"deleted_changesets": [
+		".changeset/amm-0.2.1-and-pina-cli.md"
+	],
+	"changesets": [
+		{
+			"path": ".changeset/amm-0.2.1-and-pina-cli.md",
+			"summary": "Update Pina AMM to 0.2.1 and regenerate CPI docs",
+			"details": "Regenerate `pina_bonding_curve_cpi` with `pina` CLI 0.25.1, adding program-level doc comments to `PINA_BONDING_CURVE_ID` with no wire or public API changes. The vendored `pina_amm` CPI crate is re-imported against `pina-rs/amm` v0.2.1 (`0ca40de5`) on `pina` 0.25, dropping the duplicate `pina 0.23.0` dependency from `Cargo.lock` so the deployed program binary shrinks by 48 bytes (`116,240 -> 116,192 B`) and `graduate` drops 16.84% in compute units (`68,581 -> 57,032 CU`). No API or source changes occur in the Rust, TypeScript, or Dart clients or the CLI.",
+			"targets": [
+				{
+					"id": "pina_bonding_curve_cpi",
+					"kind": "package",
+					"bump": "patch",
+					"origin": "direct-change",
+					"evidence_refs": [],
+					"change_type": "fix"
+				}
+			],
+			"context": {
+				"provider": "github",
+				"host": "github.com",
+				"capabilities": {
+					"commit_web_urls": true,
+					"actor_profiles": true,
+					"review_request_lookup": true,
+					"related_issues": true,
+					"issue_comments": true
+				},
+				"introduced": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "22b62f2d8cbdcd9f5c87c3eb72071657249487aa",
+						"short_sha": "22b62f2",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/22b62f2d8cbdcd9f5c87c3eb72071657249487aa",
+						"authored_at": "2026-11-27T22:33:23Z",
+						"committed_at": "2026-11-27T22:33:23Z",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#39",
+						"title": "chore: pin pina-rs/amm v0.2.1 and update pina CLI to 0.25.1",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/39",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"last_updated": {
+					"actor": {
+						"provider": "github",
+						"host": "github.com",
+						"id": null,
+						"login": "ifiokjr",
+						"display_name": "ifiokjr",
+						"url": "https://github.com/ifiokjr",
+						"source": "review_request_author"
+					},
+					"commit": {
+						"provider": "github",
+						"host": "github.com",
+						"sha": "22b62f2d8cbdcd9f5c87c3eb72071657249487aa",
+						"short_sha": "22b62f2",
+						"url": "https://github.com/pina-rs/bonding_curve/commit/22b62f2d8cbdcd9f5c87c3eb72071657249487aa",
+						"authored_at": "2026-11-27T22:33:23Z",
+						"committed_at": "2026-11-27T22:33:23Z",
+						"author_name": "Ifiok Jr.",
+						"author_email": "1160934+ifiokjr@users.noreply.github.com"
+					},
+					"review_request": {
+						"provider": "github",
+						"host": "github.com",
+						"kind": "pull_request",
+						"id": "#39",
+						"title": "chore: pin pina-rs/amm v0.2.1 and update pina CLI to 0.25.1",
+						"url": "https://github.com/pina-rs/bonding_curve/pull/39",
+						"author": {
+							"provider": "github",
+							"host": "github.com",
+							"id": null,
+							"login": "ifiokjr",
+							"display_name": "ifiokjr",
+							"url": "https://github.com/ifiokjr",
+							"source": "review_request_author"
+						}
+					}
+				},
+				"related_issues": []
+			}
+		}
+	],
+	"changelogs": [
+		{
+			"owner_id": "bonding_curve",
+			"owner_kind": "group",
+			"output": "default",
+			"stream": "default",
+			"path": "changelog.md",
+			"format": "keep_a_changelog",
+			"notes": {
+				"title": "[0.2.2](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.2) (2026-11-27)",
+				"summary": [
+					"Grouped release for `bonding_curve`."
+				],
+				"sections": [
+					{
+						"title": "Fixes",
+						"collapsed": false,
+						"entries": [
+							"- **Update Pina AMM to 0.2.1 and regenerate CPI docs.** Regenerate `pina_bonding_curve_cpi` with `pina` CLI 0.25.1, adding program-level doc comments to `PINA_BONDING_CURVE_ID` with no wire or public API changes. The vendored `pina_amm` CPI crate is re-imported against `pina-rs/amm` v0.2.1 (`0ca40de5`) on `pina` 0.25, dropping the duplicate `pina 0.23.0` dependency from `Cargo.lock` so the deployed program binary shrinks by 48 bytes (`116,240 -> 116,192 B`) and `graduate` drops 16.84% in compute units (`68,581 -> 57,032 CU`). No API or source changes occur in the Rust, TypeScript, or Dart clients or the CLI.\n  _Packages:_ 🟢 _pina_bonding_curve_cpi_\n  _Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #39](https://github.com/pina-rs/bonding_curve/pull/39)"
+						]
+					}
+				]
+			},
+			"rendered": "## [0.2.2](https://github.com/pina-rs/bonding_curve/releases/tag/v0.2.2) (2026-11-27)\n\nGrouped release for `bonding_curve`.\n\n### Fixes\n\n- **Update Pina AMM to 0.2.1 and regenerate CPI docs.** Regenerate `pina_bonding_curve_cpi` with `pina` CLI 0.25.1, adding program-level doc comments to `PINA_BONDING_CURVE_ID` with no wire or public API changes. The vendored `pina_amm` CPI crate is re-imported against `pina-rs/amm` v0.2.1 (`0ca40de5`) on `pina` 0.25, dropping the duplicate `pina 0.23.0` dependency from `Cargo.lock` so the deployed program binary shrinks by 48 bytes (`116,240 -> 116,192 B`) and `graduate` drops 16.84% in compute units (`68,581 -> 57,032 CU`). No API or source changes occur in the Rust, TypeScript, or Dart clients or the CLI.\n  _Packages:_ 🟢 _pina_bonding_curve_cpi_\n  _Owner:_ [@ifiokjr](https://github.com/ifiokjr) · _Review:_ [PR #39](https://github.com/pina-rs/bonding_curve/pull/39)"
+		}
+	],
+	"provider": {
+		"kind": "github",
+		"owner": "pina-rs",
+		"repo": "bonding_curve",
+		"host": null
+	}
+}
